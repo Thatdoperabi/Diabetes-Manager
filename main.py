@@ -2,11 +2,13 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import StringProperty
 from kivymd.app import MDApp
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.navigationbar import MDNavigationItem, MDNavigationBar
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.button import MDButton, MDButtonText
 
 Window.size = (300, 500)
+
 
 class BaseMDNavigationItem(MDNavigationItem):
     icon = StringProperty()
@@ -57,6 +59,7 @@ BoxLayout:
         md_bg_color: self.theme_cls.backgroundColor
         
         MDFabButton:
+            id: fab_button
             icon: "plus"
             style: "standard"
             pos_hint: {"center_x": .84, "center_y": .14}
@@ -65,6 +68,15 @@ BoxLayout:
             theme_icon_color: "Custom"
             md_bg_color: "purple"
             icon_color: "black"
+            on_release: app.open_menu(self)
+            
+            MDDropDownItem:
+                pos_hint: {"center_x": .5, "center_y": .5}
+                on_release: app.open_menu(self)
+                
+                MDDropDownItemText:
+                    id: drop_text
+                    text: "Item"
     
     MDBoxLayout:
         orientation: 'horizontal'
@@ -94,14 +106,38 @@ BoxLayout:
 
 
 class Example(MDApp):
+    dropdown_menu = None
+
     def on_switch_tabs(
-        self,
-        bar: MDNavigationBar,
-        item: MDNavigationItem,
-        item_icon: str,
-        item_text: str,
+            self,
+            bar: MDNavigationBar,
+            item: MDNavigationItem,
+            item_icon: str,
+            item_text: str,
     ):
         self.root.ids.screen_manager.current = item_text
+
+    def open_menu(self, item):
+        if not self.dropdown_menu:
+            menu_items = [
+                {
+                    "text": "Blood Sugar",
+                    "on_release": lambda x="Sugar": self.menu_callback(x),
+                },
+                {
+                    "text": "Food",
+                    "on_release": lambda x="Food": self.menu_callback(x),
+                },
+                {
+                    "text": "Both",
+                    "on_release": lambda x="Both": self.menu_callback(x),
+                }
+            ]
+            self.dropdown_menu = MDDropdownMenu(caller=item, items=menu_items)
+        self.dropdown_menu.open()
+
+    def menu_callback(self, text_item):
+        self.root.ids.drop_text.text = text_item
 
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -110,12 +146,6 @@ class Example(MDApp):
 
 
 Example().run()
-
-
-
-
-
-
 
 # KV = '''
 # <BaseMDNavigationItem>
@@ -234,8 +264,6 @@ Example().run()
 #
 #
 # Test().run()
-
-
 
 
 # Example of a table
