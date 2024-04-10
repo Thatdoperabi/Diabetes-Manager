@@ -59,7 +59,7 @@ BoxLayout:
         md_bg_color: self.theme_cls.backgroundColor
         
         MDFabButton:
-            id: fab_button
+            id: button
             icon: "plus"
             style: "standard"
             pos_hint: {"center_x": .84, "center_y": .14}
@@ -68,21 +68,35 @@ BoxLayout:
             theme_icon_color: "Custom"
             md_bg_color: "purple"
             icon_color: "black"
-            on_release: app.open_menu(self)
-            
-            MDDropDownItem:
-                pos_hint: {"center_x": .5, "center_y": .5}
-                on_release: app.open_menu(self)
-                
-                MDDropDownItemText:
-                    id: drop_text
-                    text: "Item"
+            on_release: app.open_menu()
+
     
     MDBoxLayout:
-        orientation: 'horizontal'
+        orientation: 'vertical'
         md_bg_color: self.theme_cls.backgroundColor
         size_hint_y: .2
         
+        MDScreenManager:
+            id: screen_manager
+
+            BaseScreen:
+                name: "Screen 1"
+                image_size: "1024"
+
+            BaseScreen:
+                name: "Screen 2"
+                image_size: "800"
+
+            BaseScreen:
+                name: "Screen 3"
+                image_size: "600"
+                
+            BaseScreen:
+                name: "Screen 4"
+                image_size: "600"
+
+
+    
         MDNavigationBar:
             on_switch_tabs: app.on_switch_tabs(*args)
     
@@ -117,7 +131,7 @@ class Example(MDApp):
     ):
         self.root.ids.screen_manager.current = item_text
 
-    def open_menu(self, item):
+    def open_menu(self):
         if not self.dropdown_menu:
             menu_items = [
                 {
@@ -133,11 +147,12 @@ class Example(MDApp):
                     "on_release": lambda x="Both": self.menu_callback(x),
                 }
             ]
-            self.dropdown_menu = MDDropdownMenu(caller=item, items=menu_items)
-        self.dropdown_menu.open()
+            MDDropdownMenu(
+                caller=self.root.ids.button, items=menu_items
+            ).open()
 
     def menu_callback(self, text_item):
-        self.root.ids.drop_text.text = text_item
+        print(text_item)
 
     def build(self):
         self.theme_cls.theme_style = "Dark"
