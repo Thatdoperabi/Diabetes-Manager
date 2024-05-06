@@ -8,6 +8,7 @@ home_page_helper = """
 
 
 <BaseScreen>
+            
 BoxLayout:
     orientation: "vertical"
 
@@ -17,18 +18,25 @@ BoxLayout:
         size_hint_y: .18
 
         MDTopAppBar:
+            id: top_app_bar
             type: "small"
             size_hint_x: 1
             pos_hint: {"center_x": .5, "center_y": .5}
+            
+            MDTopAppBarLeadingButtonContainer:
+                id: leading_container
 
             MDTopAppBarTitle:
                 text: "Diabetes Manager"
                 theme_font_size: "Custom"
                 font_size: "16dp"
 
+
             MDTopAppBarTrailingButtonContainer:
+                id: trailing_container
                 MDActionTopAppBarButton:
                     icon: "dots-vertical"
+
 
     MDBoxLayout:
         orientation: 'vertical'
@@ -54,20 +62,43 @@ BoxLayout:
                         theme_icon_color: "Custom"
                         md_bg_color: "purple"
                         icon_color: "black"
-                        on_release: app.open_menu()
+                        on_release: screen_manager.current = "Screen 5"
+
 
             BaseScreen:
                 name: "Screen 2"
-                image_size: "800"
 
             BaseScreen:
                 name: "Screen 3"
-                image_size: "600"
 
             BaseScreen:
                 name: "Screen 4"
-                image_size: "600"
-
+                
+            BaseScreen:
+                name: "Screen 5"
+                on_enter: app.add_back_button()
+                on_leave: app.remove_back_button()
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: "10dp"
+                    spacing: "20dp"
+                
+                    MDTextField:
+                        id: name
+                        hint_text: "Enter your name"
+                
+                    MDTextField:
+                        id: email
+                        hint_text: "Enter your email"
+                
+                    MDTextField:
+                        id: phone
+                        hint_text: "Enter your phone number"
+                
+                    MDButton:
+                        text: "Submit"
+                        pos_hint: {'center_x': 0.5}
+                        on_release: app.submit_form()
 
 
         MDNavigationBar:
