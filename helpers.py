@@ -16,11 +16,14 @@ BoxLayout:
         orientation: 'horizontal'
         md_bg_color: self.theme_cls.backgroundColor
         size_hint_y: .18
+        height: "40dp"
 
         MDTopAppBar:
             id: top_app_bar
             type: "small"
             size_hint_x: 1
+            size_hint_y: None
+            height: "40dp"
             pos_hint: {"center_x": .5, "center_y": .5}
             
             MDTopAppBarLeadingButtonContainer:
@@ -29,19 +32,20 @@ BoxLayout:
             MDTopAppBarTitle:
                 text: "Diabetes Manager"
                 theme_font_size: "Custom"
-                font_size: "16dp"
+                font_size: "14dp"
 
 
             MDTopAppBarTrailingButtonContainer:
                 id: trailing_container
                 MDActionTopAppBarButton:
                     icon: "dots-vertical"
+                    icon_size: "24dp"
 
 
     MDBoxLayout:
         orientation: 'vertical'
         md_bg_color: self.theme_cls.backgroundColor
-        size_hint_y: 1
+        size_hint_y: 1.5
 
         MDScreenManager:
             id: screen_manager
@@ -102,22 +106,30 @@ BoxLayout:
 
 
         MDNavigationBar:
-            on_switch_tabs: app.on_switch_tabs(*args)
+            height: "40dp"
 
-            BaseMDNavigationItem
+            BaseMDNavigationItem:
                 icon: "gmail"
                 text: "Screen 1"
                 active: True
+                font_size: "12dp"  # Smaller font size for navigation text
+                icon_size: "24dp"  # Smaller icon size
 
-            BaseMDNavigationItem
+            BaseMDNavigationItem:
                 icon: "twitter"
                 text: "Screen 2"
+                font_size: "12dp"
+                icon_size: "24dp"
 
-            BaseMDNavigationItem
+            BaseMDNavigationItem:
                 icon: "linkedin"
                 text: "Screen 3"
+                font_size: "12dp"
+                icon_size: "24dp"
 
-            BaseMDNavigationItem
+            BaseMDNavigationItem:
                 icon: "linkedin"
                 text: "Screen 4"
+                font_size: "12dp"
+                icon_size: "24dp"
 """
