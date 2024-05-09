@@ -8,7 +8,7 @@ home_page_helper = """
 
 
 <BaseScreen>
-            
+
 BoxLayout:
     orientation: "vertical"
 
@@ -25,7 +25,7 @@ BoxLayout:
             size_hint_y: None
             height: "40dp"
             pos_hint: {"center_x": .5, "center_y": .5}
-            
+
             MDTopAppBarLeadingButtonContainer:
                 id: leading_container
 
@@ -77,35 +77,130 @@ BoxLayout:
 
             BaseScreen:
                 name: "Screen 4"
-                
+
             BaseScreen:
                 name: "Screen 5"
+                md_bg_color: self.theme_cls.backgroundColor
                 on_enter: app.add_back_button()
                 on_leave: app.remove_back_button()
-                BoxLayout:
-                    orientation: 'vertical'
-                    padding: "10dp"
-                    spacing: "20dp"
-                
-                    MDTextField:
-                        id: name
-                        hint_text: "Enter your name"
-                
-                    MDTextField:
-                        id: email
-                        hint_text: "Enter your email"
-                
-                    MDTextField:
-                        id: phone
-                        hint_text: "Enter your phone number"
-                
-                    MDButton:
-                        text: "Submit"
-                        pos_hint: {'center_x': 0.5}
-                        on_release: app.submit_form()
+                TabbedPanel:
+                    do_default_tab: False
+                    TabbedPanelItem:
+                        text: 'Sugar'
+                        BoxLayout:
+                            orientation: 'vertical'
+                            padding: dp(20)
+                            spacing: dp(30)
+
+                            BoxLayout:
+                                orientation: 'horizontal'
+                                size_hint_y: None
+                                height: dp(48)
+                                pos_hint: {'top': 1}
+
+                                MDLabel:
+                                    text: "Time:"
+                                    size_hint_x: 0.2
+                                    halign: 'left'
+                                    valign: 'center'
+
+                                MDTextField:
+                                    mode: "filled"
+                                    hint_text: "Enter your name"
+                                    id: sugar_time
+                                    halign: 'right'
+                                    size_hint_x: 0.4
+                                
+                            BoxLayout:
+                                orientation: 'horizontal'
+                                size_hint_y: None
+                                height: dp(24)
+                                
+                                MDSegmentedButton:
+                                    id: meal_toggle
+                                    size_hint_x: 0.5
+                                    MDBoxLayout:
+                                        orientation: 'horizontal'
+                                        padding: [dp(5), 0]
+                                    MDSegmentedButtonItem:
+                                        size_hint_x: None
+                                        width: dp(130)
+                                        MDSegmentButtonLabel:
+                                            text: "Post-meal"
+                                            font_size: '12sp'
+                                    MDSegmentedButtonItem:
+                                        size_hint_x: None
+                                        width: dp(130)
+                                        MDSegmentButtonLabel:
+                                            text: "Fasting"
+                                            font_size: '12sp'
+                                        
+
+                            BoxLayout:
+                                orientation: 'vertical'
+                                spacing: dp(30)
+                                padding: (0, 0, 0, 40)
+                                
+                                BoxLayout:
+                                    orientation: 'horizontal'
+                                    size_hint_y: None
+                                    height: dp(48)
+
+                                    MDLabel:
+                                        text: "Blood Sugar:"
+                                        size_hint_x: 0.3
+                                        halign: 'left'
+                                        valign: 'center'
+                                        
+                                    MDIcon:
+                                        padding: (0, 0, 20, 0)
+                                        id: sugar_level_indicator
+                                        icon: "circle"
+                                        size: dp(24), dp(24)
+                                        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                                        theme_icon_color: "Custom"
+                                        color: 0, 1, 0, 1  # Green by default  
+                                          
+                                    MDTextField:
+                                        id: blood_sugar_input
+                                        mode: "filled"
+                                        hint_text: "Enter blood sugar level"
+                                        halign: 'right'
+                                        size_hint_x: 0.12
+                                        on_text: app.update_sugar_level_indicator(self.text)
+                        
+                            Widget:
+                                size_hint_y: .05
+                                
+                            MDButton:
+                                height: dp(48)
+                                pos_hint: {'center_x': .5}
+                                style: "elevated"
+                                theme_shadow_color: "Custom"
+                                shadow_color: "purple"
+                            
+                                MDButtonText:
+                                    text: "Save"
+                                    theme_text_color: "Custom"
+                                    text_color: "purple"
+                                
+                    TabbedPanelItem:
+                        text: 'Carbs'
+                        BoxLayout:
+                            orientation: 'vertical'
+                            Label:
+                                text: 'Content for Carbs'
+                    TabbedPanelItem:
+                        text: 'Both'
+                        BoxLayout:
+                            orientation: 'vertical'
+                            Label:
+                                text: 'Content for Both'
+                            
 
 
         MDNavigationBar:
+            on_switch_tabs: app.on_switch_tabs(*args)
             height: "40dp"
 
             BaseMDNavigationItem:
