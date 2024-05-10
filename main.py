@@ -1,15 +1,11 @@
-import time
 from datetime import datetime
-
-import kivy
-import kivymd
+import sqlite3
 from kivy.core.window import Window
 from kivy.properties import StringProperty
 from kivymd.uix.navigationbar import MDNavigationItem, MDNavigationBar
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.screen import MDScreen
 from kivy.clock import Clock
-from kivymd.uix.tab import MDTabsItem, MDTabsItemIcon, MDTabsBadge, MDTabsItemText
 
 from helpers import home_page_helper
 from kivy.lang import Builder
@@ -28,14 +24,48 @@ class BaseScreen(MDScreen):
     image_size = StringProperty()
 
 
+class DBManager:
+    def __init__(self):
+        self.conn = sqlite3.connect('diabetesmanager.db')
+        self.cursor = self.conn.cursor()
+        create_table_sql = '''
+        CREATE TABLE IF NOT EXISTS user_info(
+            id INTEGER PRIMARY KEY,
+            data_time DATETIME,
+            blood_sugar INTEGER,
+            carbs INTEGER,
+            fasting INTEGER           
+            )
+        '''
+        self.cursor.execute(create_table_sql)
+        self.conn.commit()
+
+    def add_user_data(self, data_time, blood_sugar, carbs, fasting):
+        carbs_value = None if carbs is None else carbs
+        self.cursor.execute('''
+            INSERT INTO user_info (data_time, blood_sugar, carbs, fasting)
+            VALUES (?, ?, ?, ?)
+        ''', (data_time, blood_sugar, carbs_value, fasting))
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
 class DiabetesManager(MDApp):
+    fasting_state = 0
     dropdown_menu = None
 
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Purple"
         Clock.schedule_interval(self.update_time, 3)
+        DBManager.__init__(self)
         return Builder.load_string(home_page_helper)
+
+    def update_fasting_state(self, instance, state):
+        self.fasting_state = 1 if state == "Fasting" else 0
+        print(f"Fasting state updated to: {self.fasting_state}")
 
     def add_back_button(self):
         back_button = MDIconButton(
@@ -49,17 +79,23 @@ class DiabetesManager(MDApp):
         self.root.ids.leading_container.add_widget(back_button)
         self.root.ids.leading_container.padding = [0, 0, 10, 0]
 
+    def save_user_data(self):
+        # Retrieve data from UI
+        data_time = self.root.ids.sugar_time.text
+        blood_sugar = self.root.ids.blood_sugar_input.text
+        carbs = None
+        fasting = self.fasting_state
+
+        # Save data to database
+        db_manager = DBManager()
+        db_manager.add_user_data(data_time, blood_sugar, carbs, fasting)
+        db_manager.close()
+
     def remove_back_button(self):
         self.root.ids.leading_container.clear_widgets()
 
     def navigate_to_screen(self, instance):
         self.root.ids.screen_manager.current = 'Screen 1'
-
-    def submit_form(self):
-        time = self.root.ids.name.time
-        email = self.root.ids.email.text
-        phone = self.root.ids.phone.text
-        print(f"Name: {time}, Email: {email}, Phone: {phone}")
 
     def update_time(self, *args):
         current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
@@ -76,12 +112,6 @@ class DiabetesManager(MDApp):
             self.root.ids.sugar_level_indicator.color = (1, 0, 0, 1)  # Red
         else:
             self.root.ids.sugar_level_indicator.color = (0, 1, 0, 1)
-
-    def save_user_data(self, time, sugar_level, meal_time):
-        # Connect to database and insert data
-        # This is just a placeholder for database operation
-        print(f"Saving data: Time - {time}, Sugar Level - {sugar_level}, Meal Time - {meal_time}")
-
 
     def on_switch_tabs(
             self,

@@ -125,12 +125,14 @@ BoxLayout:
                                     MDSegmentedButtonItem:
                                         size_hint_x: None
                                         width: dp(130)
+                                        on_release: app.update_fasting_state(self, 'Post-meal')
                                         MDSegmentButtonLabel:
                                             text: "Post-meal"
                                             font_size: '12sp'
                                     MDSegmentedButtonItem:
                                         size_hint_x: None
                                         width: dp(130)
+                                        on_release: app.update_fasting_state(self, 'Fasting')
                                         MDSegmentButtonLabel:
                                             text: "Fasting"
                                             font_size: '12sp'
@@ -178,6 +180,7 @@ BoxLayout:
                                 style: "elevated"
                                 theme_shadow_color: "Custom"
                                 shadow_color: "purple"
+                                on_release: app.save_user_data()
                             
                                 MDButtonText:
                                     text: "Save"
