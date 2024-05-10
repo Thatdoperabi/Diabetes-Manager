@@ -34,18 +34,21 @@ class DBManager:
             data_time DATETIME,
             blood_sugar INTEGER,
             carbs INTEGER,
-            fasting INTEGER           
+            fasting INTEGER,
+            meal_description TEXT           
             )
         '''
         self.cursor.execute(create_table_sql)
         self.conn.commit()
 
-    def add_user_data(self, data_time, blood_sugar, carbs, fasting):
+    def add_user_data(self, data_time, blood_sugar, carbs, fasting, meal_description):
+        blood_sugar_value = None if blood_sugar is None else blood_sugar
+        fasting_value = None if fasting is None else fasting
         carbs_value = None if carbs is None else carbs
         self.cursor.execute('''
-            INSERT INTO user_info (data_time, blood_sugar, carbs, fasting)
-            VALUES (?, ?, ?, ?)
-        ''', (data_time, blood_sugar, carbs_value, fasting))
+            INSERT INTO user_info (data_time, blood_sugar, carbs, fasting, meal_description)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (data_time, blood_sugar_value, carbs_value, fasting_value, meal_description))
         self.conn.commit()
 
     def close(self):
@@ -53,7 +56,8 @@ class DBManager:
 
 
 class DiabetesManager(MDApp):
-    fasting_state = 0
+    current_time = StringProperty()
+    fasting_state = None
     dropdown_menu = None
 
     def build(self):
@@ -65,7 +69,6 @@ class DiabetesManager(MDApp):
 
     def update_fasting_state(self, instance, state):
         self.fasting_state = 1 if state == "Fasting" else 0
-        print(f"Fasting state updated to: {self.fasting_state}")
 
     def add_back_button(self):
         back_button = MDIconButton(
@@ -81,14 +84,16 @@ class DiabetesManager(MDApp):
 
     def save_user_data(self):
         # Retrieve data from UI
-        data_time = self.root.ids.sugar_time.text
-        blood_sugar = self.root.ids.blood_sugar_input.text
-        carbs = None
+        data_time = self.current_time
+        blood_sugar = self.root.ids.blood_sugar_input.text if self.root.ids.blood_sugar_input.text.strip() != '' else None
+        carbs = self.root.ids.carbs.text if self.root.ids.carbs.text.strip() != '' else None
+        meal_description = self.root.ids.meal_description.text if self.root.ids.meal_description.text.strip() != '' else None
         fasting = self.fasting_state
+
 
         # Save data to database
         db_manager = DBManager()
-        db_manager.add_user_data(data_time, blood_sugar, carbs, fasting)
+        db_manager.add_user_data(data_time, blood_sugar, carbs, fasting, meal_description)
         db_manager.close()
 
     def remove_back_button(self):
@@ -112,6 +117,9 @@ class DiabetesManager(MDApp):
             self.root.ids.sugar_level_indicator.color = (1, 0, 0, 1)  # Red
         else:
             self.root.ids.sugar_level_indicator.color = (0, 1, 0, 1)
+
+    def update_time(self, *args):
+        self.current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
 
     def on_switch_tabs(
             self,

@@ -108,6 +108,7 @@ BoxLayout:
                                     mode: "filled"
                                     hint_text: "Enter your name"
                                     id: sugar_time
+                                    text: app.current_time
                                     halign: 'right'
                                     size_hint_x: 0.4
                                 
@@ -191,8 +192,86 @@ BoxLayout:
                         text: 'Carbs'
                         BoxLayout:
                             orientation: 'vertical'
-                            Label:
-                                text: 'Content for Carbs'
+                            padding: dp(20)
+                            spacing: dp(30)
+
+                            BoxLayout:
+                                orientation: 'horizontal'
+                                size_hint_y: None
+                                height: dp(48)
+
+                                MDLabel:
+                                    text: "Time:"
+                                    size_hint_x: 0.2
+                                    halign: 'left'
+                                    valign: 'center'
+
+                                MDTextField:
+                                    mode: "filled"
+                                    hint_text: "Enter your name"
+                                    id: sugar_time
+                                    text: app.current_time
+                                    halign: 'right'
+                                    size_hint_x: 0.4
+                            BoxLayout:
+                                orientation: 'vertical'
+                                spacing: dp(30)
+                                padding: (0, 0, 0, 70)
+    
+                                BoxLayout:
+                                    orientation: 'horizontal'
+                                    size_hint_y: None
+                                    height: dp(48)
+    
+                                    MDLabel:
+                                        text: "Carbs:"
+                                        size_hint_x: 0.3
+                                        halign: 'left'
+                                        valign: 'center'
+                                            
+                                    MDTextField:
+                                        mode: "filled"
+                                        id: carbs
+                                        halign: 'right'
+                                        size_hint_x: 0.12
+                                        
+                            BoxLayout:
+                                orientation: 'vertical'
+                                spacing: dp(30)
+                                padding: (0, 0, 0, 30)
+    
+                                BoxLayout:
+                                    orientation: 'horizontal'
+                                    size_hint_y: None
+                                    height: dp(48)
+    
+                                    MDLabel:
+                                        text: "Meal Description:"
+                                        size_hint_x: 0.2
+                                        halign: 'left'
+                                        valign: 'center'
+    
+                                    MDTextField:
+                                        mode: "filled"
+                                        id: meal_description
+                                        halign: 'right'
+                                        size_hint_x: 0.4
+                            
+                                Widget:
+                                    size_hint_y: .05
+                                    
+                                MDButton:
+                                    height: dp(48)
+                                    pos_hint: {'center_x': .5}
+                                    style: "elevated"
+                                    theme_shadow_color: "Custom"
+                                    shadow_color: "purple"
+                                    on_release: app.save_user_data()
+                                
+                                    MDButtonText:
+                                        text: "Save"
+                                        theme_text_color: "Custom"
+                                        text_color: "purple"
                     TabbedPanelItem:
                         text: 'Both'
                         BoxLayout:
