@@ -103,9 +103,9 @@ class DiabetesManager(MDApp):
         self.root.ids.screen_manager.current = 'Screen 1'
 
     def update_time(self, *args):
-        current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
+        self.current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
         if hasattr(self, 'root'):
-            self.root.ids.sugar_time.text = f'{current_time}'
+            self.root.ids.sugar_time.text = f'{self.current_time}'
             # self.root.ids.carbs_time.text = f'Current Time: {current_time}'
             # self.root.ids.both_time.text = f'Current Time: {current_time}'
 
@@ -117,9 +117,6 @@ class DiabetesManager(MDApp):
             self.root.ids.sugar_level_indicator.color = (1, 0, 0, 1)  # Red
         else:
             self.root.ids.sugar_level_indicator.color = (0, 1, 0, 1)
-
-    def update_time(self, *args):
-        self.current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
 
     def on_switch_tabs(
             self,
