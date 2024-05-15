@@ -55,6 +55,77 @@ BoxLayout:
                 MDFloatLayout:
                     orientation: 'horizontal'
                     md_bg_color: self.theme_cls.backgroundColor
+                    
+                    
+                    MDCard:
+                        style: "elevated"
+                        pos_hint: {"center_x": .5, "center_y": .85}
+                        padding: "8dp"  # Adjust padding if necessary
+                        padding: "8dp"
+                        size_hint: None, None
+                        size: "280dp", "100dp"  # Adjusted the size to provide more space
+                        md_bg_color_disabled: "grey"
+                        theme_shadow_offset: "Custom"
+                        shadow_offset: (1, -2)
+                        theme_shadow_softness: "Custom"
+                        shadow_softness: 1
+                        theme_elevation_level: "Custom"
+                        elevation_level: 2
+                        
+                        BoxLayout:
+                            orientation: 'vertical'  # Confirming horizontal orientation
+                            size_hint_x: 1  # Use full width of the MDCard
+                            
+                            BoxLayout:
+                                size_hint_y: 0.5
+                                MDLabel:
+                                    text: "Est. A1C"
+                                    halign: 'left'
+                                    size_hint_x: None
+                                    valign: 'middle'
+                                    width: dp(80)
+                                    
+                                    
+                                MDLabel:
+                                    id: a1c_value
+                                    text: "7.2%"  # Example A1C value
+                                    halign: 'left'
+                                    theme_text_color: "Custom"
+                                    text_color: [0, 1, 0, 1] if 7.2 < 7.0 else [1, 0, 0, 1]
+                                    size_hint_x: None
+                                    text_size: self.size
+                                    valign: 'middle'
+                                    width: dp(50)
+                                Widget:
+                                    size_hint_x: None
+                                    width: dp(20)  # This widget acts as a spacer
+                                MDLabel:
+                                    text: "Last 30 days"
+                                    halign: 'right'
+                                    size_hint_x: None
+                                    text_size: self.size
+                                    valign: 'middle'
+                                    width: dp(100)
+                            MDDivider:
+                                size_hint_y: None  # Important to set to None to not stretch
+                                height: dp(2)  # Set the height of the divider
+                                pos_hint: {'center_x': 0.5}
+                            Widget:
+                                size_hint_y: 0.5
+                    
+                    MDCard:
+                        style: "elevated"
+                        pos_hint: {"center_x": .5, "center_y": .47}
+                        padding: "4dp"
+                        size_hint: None, None
+                        size: "240dp", "180dp"
+                        md_bg_color_disabled: "grey"
+                        theme_shadow_offset: "Custom"
+                        shadow_offset: (1, -2)
+                        theme_shadow_softness: "Custom"
+                        shadow_softness: 1
+                        theme_elevation_level: "Custom"
+                        elevation_level: 2
 
                     MDFabButton:
                         id: button
@@ -216,7 +287,7 @@ BoxLayout:
                             BoxLayout:
                                 orientation: 'vertical'
                                 spacing: dp(30)
-                                padding: (0, 0, 0, 70)
+                                padding: (0, 0, 0, 100)
     
                                 BoxLayout:
                                     orientation: 'horizontal'
@@ -238,7 +309,7 @@ BoxLayout:
                             BoxLayout:
                                 orientation: 'vertical'
                                 spacing: dp(30)
-                                padding: (0, 0, 0, 30)
+                                padding: (0, 0, 0, 40)
     
                                 BoxLayout:
                                     orientation: 'horizontal'
