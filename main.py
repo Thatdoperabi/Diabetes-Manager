@@ -1,7 +1,7 @@
 from datetime import datetime
 import sqlite3
 from kivy.core.window import Window
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, ListProperty, ColorProperty
 from kivymd.uix.navigationbar import MDNavigationItem, MDNavigationBar
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.screen import MDScreen
@@ -22,6 +22,14 @@ class BaseMDNavigationItem(MDNavigationItem):
 
 class BaseScreen(MDScreen):
     image_size = StringProperty()
+
+
+class HomeScreen(BaseScreen):
+    pass
+
+
+class UserInputScreen(BaseScreen):
+    pass
 
 
 class DBManager:
@@ -56,6 +64,7 @@ class DBManager:
 
 
 class DiabetesManager(MDApp):
+    icon_color = ColorProperty([0.5, 0.5, 0.5, 1])  # Default gray color in RGBA
     current_time = StringProperty()
     fasting_state = None
     dropdown_menu = None
@@ -65,6 +74,8 @@ class DiabetesManager(MDApp):
         self.theme_cls.primary_palette = "Purple"
         Clock.schedule_interval(self.update_time, 3)
         DBManager.__init__(self)
+        Builder.load_file('home_screen.kv')
+        Builder.load_file('user_input_screen.kv')
         return Builder.load_string(home_page_helper)
 
     def update_fasting_state(self, instance, state):
@@ -85,11 +96,11 @@ class DiabetesManager(MDApp):
     def save_user_data(self):
         # Retrieve data from UI
         data_time = self.current_time
-        blood_sugar = self.root.ids.blood_sugar_input.text if self.root.ids.blood_sugar_input.text.strip() != '' else None
-        carbs = self.root.ids.carbs.text if self.root.ids.carbs.text.strip() != '' else None
-        meal_description = self.root.ids.meal_description.text if self.root.ids.meal_description.text.strip() != '' else None
+        current_screen = self.root.ids.screen_manager.current_screen
+        blood_sugar = current_screen.ids.blood_sugar_input.text if current_screen.ids.blood_sugar_input.text.strip() != '' else None
+        carbs = current_screen.ids.carbs.text if current_screen.ids.carbs.text.strip() != '' else None
+        meal_description = current_screen.ids.meal_description.text if current_screen.ids.meal_description.text.strip() != '' else None
         fasting = self.fasting_state
-
 
         # Save data to database
         db_manager = DBManager()
@@ -100,32 +111,38 @@ class DiabetesManager(MDApp):
         self.root.ids.leading_container.clear_widgets()
 
     def navigate_to_screen(self, instance):
-        self.root.ids.screen_manager.current = 'Screen 1'
+        self.root.ids.screen_manager.current = 'home_screen'
 
     def update_time(self, *args):
         self.current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
-        if hasattr(self, 'root'):
-            self.root.ids.sugar_time.text = f'{self.current_time}'
-            # self.root.ids.carbs_time.text = f'Current Time: {current_time}'
-            # self.root.ids.both_time.text = f'Current Time: {current_time}'
-
-    # def on_start(self):
-    #     Clock.schedule_interval(self.update_time, 60)
+        # Accessing the specific screen by its name in the ScreenManager
+        user_input_screen = self.root.ids.screen_manager.get_screen('user_input_screen')
+        if hasattr(user_input_screen, 'ids') and 'sugar_time' in user_input_screen.ids:
+            user_input_screen.ids.sugar_time.text = self.current_time
+        else:
+            print("sugar_time widget not found")
 
     def update_sugar_level_indicator(self, value):
-        if value.isdigit() and int(value) > 180:
-            self.root.ids.sugar_level_indicator.color = (1, 0, 0, 1)  # Red
-        else:
-            self.root.ids.sugar_level_indicator.color = (0, 1, 0, 1)
+        try:
+            sugar_level = int(value)
+            if sugar_level < 180:
+                self.icon_color = [0, 1, 0, 1]  # Green
+            else:
+                self.icon_color = [1, 0, 0, 1]  # Red
+        except ValueError:
+            self.icon_color = [0.5, 0.5, 0.5, 1]
 
-    def on_switch_tabs(
-            self,
-            bar: MDNavigationBar,
-            item: MDNavigationItem,
-            item_icon: str,
-            item_text: str,
-    ):
-        self.root.ids.screen_manager.current = item_text
+    def on_switch_tabs(self, bar, item, item_icon, item_text):
+        # Mapping text to screen names
+        screen_map = {
+            "Home": "home_screen",
+            # "Screen 2": "screen_2",
+            # "Screen 3": "screen_3",
+            # "Screen 4": "screen_4"
+        }
+        new_screen_name = screen_map.get(item_text)
+        if new_screen_name:
+            self.root.ids.screen_manager.current = new_screen_name
 
 
 DiabetesManager().run()
