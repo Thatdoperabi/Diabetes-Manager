@@ -27,7 +27,7 @@ BoxLayout:
             size_hint_x: 1
             size_hint_y: None
             height: "40dp"
-            pos_hint: {"center_x": .5, "center_y": .5}
+            # pos_hint: {"center_x": .5, "center_y": .5}
 
             MDTopAppBarLeadingButtonContainer:
                 id: leading_container
@@ -36,13 +36,14 @@ BoxLayout:
                 text: "Diabetes Manager"
                 theme_font_size: "Custom"
                 font_size: "14dp"
-
-
+                halign: "left"
+                
             MDTopAppBarTrailingButtonContainer:
                 id: trailing_container
                 MDActionTopAppBarButton:
                     icon: "dots-vertical"
                     icon_size: "24dp"
+                    pos_hint: {"center_y": .5}
 
 
     MDBoxLayout:

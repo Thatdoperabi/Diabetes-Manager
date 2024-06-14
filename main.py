@@ -59,6 +59,16 @@ class DBManager:
         ''', (data_time, blood_sugar_value, carbs_value, fasting_value, meal_description))
         self.conn.commit()
 
+    def get_blood_sugar_stats(self):
+        self.cursor.execute('''
+            SELECT AVG(blood_sugar), MIN(blood_sugar), MAX(blood_sugar)
+            FROM user_info
+            WHERE blood_sugar IS NOT NULL
+            AND blood_sugar IS NOT ''
+        ''')
+        result = self.cursor.fetchone()
+        return result  # Returns a tuple (avg, min, max)
+
     def close(self):
         self.conn.close()
 
@@ -73,6 +83,7 @@ class DiabetesManager(MDApp):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Purple"
         Clock.schedule_interval(self.update_time, 3)
+        Clock.schedule_once(self.update_blood_sugar_stats, 0)
         DBManager.__init__(self)
         Builder.load_file('home_screen.kv')
         Builder.load_file('user_input_screen.kv')
@@ -107,6 +118,8 @@ class DiabetesManager(MDApp):
         db_manager.add_user_data(data_time, blood_sugar, carbs, fasting, meal_description)
         db_manager.close()
 
+        self.update_blood_sugar_stats()
+
     def remove_back_button(self):
         self.root.ids.leading_container.clear_widgets()
 
@@ -131,6 +144,17 @@ class DiabetesManager(MDApp):
                 self.icon_color = [1, 0, 0, 1]  # Red
         except ValueError:
             self.icon_color = [0.5, 0.5, 0.5, 1]
+
+    def update_blood_sugar_stats(self, *args):
+        db_manager = DBManager()
+        avg, low, high = db_manager.get_blood_sugar_stats()
+        db_manager.close()
+
+        # Update the UI with the retrieved values
+        home_screen = self.root.ids.screen_manager.get_screen('home_screen')
+        home_screen.ids.avg_value.text = str(round(avg)) if avg is not None else "N/A"
+        home_screen.ids.low_value.text = str(round(low)) if low is not None else "N/A"
+        home_screen.ids.high_value.text = str(round(high)) if high is not None else "N/A"
 
     def on_switch_tabs(self, bar, item, item_icon, item_text):
         # Mapping text to screen names

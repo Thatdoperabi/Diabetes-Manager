@@ -3,14 +3,12 @@
         orientation: 'horizontal'
         md_bg_color: self.theme_cls.backgroundColor
 
-
         MDCard:
             style: "elevated"
-            pos_hint: {"center_x": .5, "center_y": .85}
+            pos_hint: {"center_x": .5, "center_y": .8}
             padding: "8dp"  # Adjust padding if necessary
-            padding: "8dp"
             size_hint: None, None
-            size: "280dp", "100dp"  # Adjusted the size to provide more space
+            size: "280dp", "150dp"  # Adjusted the size to provide more space
             md_bg_color_disabled: "grey"
             theme_shadow_offset: "Custom"
             shadow_offset: (1, -2)
@@ -20,18 +18,20 @@
             elevation_level: 2
 
             BoxLayout:
-                orientation: 'vertical'  # Confirming horizontal orientation
+                orientation: 'vertical'  # Confirming vertical orientation
                 size_hint_x: 1  # Use full width of the MDCard
 
                 BoxLayout:
-                    size_hint_y: 0.5
+                    size_hint_y: None
+                    height: dp(50)
+                    orientation: 'horizontal'
+
                     MDLabel:
                         text: "Est. A1C"
                         halign: 'left'
                         size_hint_x: None
                         valign: 'middle'
                         width: dp(80)
-
 
                     MDLabel:
                         id: a1c_value
@@ -53,16 +53,86 @@
                         text_size: self.size
                         valign: 'middle'
                         width: dp(100)
+
                 MDDivider:
                     size_hint_y: None  # Important to set to None to not stretch
                     height: dp(2)  # Set the height of the divider
                     pos_hint: {'center_x': 0.5}
-                Widget:
-                    size_hint_y: 0.5
+
+                # New BoxLayout to contain the text under the divider
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: "8dp"
+                    spacing: "10dp"
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDLabel:
+                            text: "Average"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            id: avg_value
+                            text: "7.5"  # Example average value
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            text: "mg/dl"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDLabel:
+                            text: "Lowest"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            id: low_value
+                            text: "6.8"  # Example lowest value
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            text: "mg/dl"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDLabel:
+                            text: "Highest"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            id: high_value
+                            text: "8.2"  # Example highest value
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            text: "mg/dl"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
 
         MDCard:
             style: "elevated"
-            pos_hint: {"center_x": .5, "center_y": .47}
+            pos_hint: {"center_x": .5, "center_y": .2}
             padding: "4dp"
             size_hint: None, None
             size: "240dp", "180dp"
