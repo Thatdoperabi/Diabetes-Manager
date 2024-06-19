@@ -1,0 +1,32 @@
+<AiScreen>:
+    name: 'ai_screen'
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+
+        ScrollView:
+            id: scroll_view
+            size_hint: (1, None)
+            height: 300
+            do_scroll_x: False
+            do_scroll_y: True
+
+            BoxLayout:
+                id: message_container
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+        TextInput:
+            id: user_input
+            hint_text: "Type your message here"
+            size_hint_y: None
+            height: 40
+            multiline: False
+
+        Button:
+            text: "Send"
+            size_hint_y: None
+            height: 40
+            on_release: root.send_message()

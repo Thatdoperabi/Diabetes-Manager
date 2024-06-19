@@ -1,19 +1,37 @@
+import os
+import threading
+import requests
+import time
 from datetime import datetime
 import sqlite3
 from kivy.core.window import Window
-from kivy.properties import StringProperty, ListProperty, ColorProperty
-from kivymd.uix.navigationbar import MDNavigationItem, MDNavigationBar
+from kivy.properties import StringProperty, ColorProperty
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from kivymd.uix.navigationbar import MDNavigationItem
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.screen import MDScreen
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
+from kivy.lang import Builder
+from kivymd.app import MDApp
+from dotenv import load_dotenv
+import socket
 
 from helpers import home_page_helper
-from kivy.lang import Builder
 
-from kivymd.app import MDApp
+# Load environment variables
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
 Window.size = (300, 500)
 
+# Define the system message to set the assistant's persona or rules
+system_message = {
+    "role": "system",
+    "content": "You are a helpful nutritionists named Rabi who provides clear and concise answers. You specialize in "
+               "diabetic education. You provide meal recommendations and blood sugar predictions based off of blood "
+               "sugar readings and carb intake."
+}
 
 class BaseMDNavigationItem(MDNavigationItem):
     icon = StringProperty()
@@ -31,6 +49,74 @@ class HomeScreen(BaseScreen):
 class UserInputScreen(BaseScreen):
     pass
 
+
+class AiScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.conversation_history = []
+
+    def send_message(self):
+        user_input = self.ids.user_input.text
+        if user_input.strip() == "":
+            self.add_message("system", "Please enter a message.")
+            return
+
+        prompt = user_input
+        self.conversation_history.append({"role": "user", "content": prompt})
+        self.add_message("user", prompt)
+        self.ids.user_input.text = ""
+        threading.Thread(target=self.request_response, args=(prompt,)).start()
+
+    def request_response(self, prompt):
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        json_data = {
+            "model": "gpt-3.5-turbo",
+            "messages": [system_message] + self.conversation_history
+        }
+
+        retries = 5
+        backoff_factor = 0.3
+        for i in range(retries):
+            try:
+                response = requests.post(url, headers=headers, json=json_data, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                result = data['choices'][0]['message']['content'].strip()
+                self.conversation_history.append({"role": "assistant", "content": result})
+                self.add_message("assistant", result)
+                return
+            except requests.RequestException as e:
+                if isinstance(e, requests.exceptions.ConnectionError) and isinstance(e.args[0], socket.gaierror):
+                    if i < retries - 1:
+                        time.sleep(backoff_factor * (2 ** i))
+                        continue
+                if i < retries - 1:
+                    time.sleep(backoff_factor * (2 ** i))
+                else:
+                    self.add_message("system", f"Connection Error: {str(e)}")
+                    break
+
+    @mainthread
+    def add_message(self, role, content):
+        message_box = MDBoxLayout(orientation='vertical', size_hint_y=None, padding=[10, 20, 10, 10], spacing=10)
+
+        message_label = MDLabel(
+            text=f"{role.capitalize()}: {content}",
+            size_hint_y=None,
+            text_size=(self.width - 20, None),
+            halign='left',
+            valign='top'
+        )
+        message_label.bind(texture_size=lambda instance, value: setattr(message_label, 'height', value[1]))
+        message_label.bind(texture_size=lambda instance, value: setattr(message_box, 'height', value[1] + 30))
+        message_box.add_widget(message_label)
+
+        self.ids.message_container.add_widget(message_box)
+        self.ids.scroll_view.scroll_y = 0
 
 class DBManager:
     def __init__(self):
@@ -58,6 +144,20 @@ class DBManager:
             VALUES (?, ?, ?, ?, ?)
         ''', (data_time, blood_sugar_value, carbs_value, fasting_value, meal_description))
         self.conn.commit()
+
+    def calculate_a1c(self, average_blood_sugar):
+        if average_blood_sugar is None:
+            return None
+        a1c = (average_blood_sugar + 46.7) / 28.7
+        return a1c
+
+    def update_a1c(self):
+        stats = self.get_blood_sugar_stats()
+        if stats and stats[0] is not None:
+            avg_blood_sugar = stats[0]
+            a1c = self.calculate_a1c(avg_blood_sugar)
+            return a1c
+        return None
 
     def get_blood_sugar_stats(self):
         self.cursor.execute('''
@@ -87,6 +187,7 @@ class DiabetesManager(MDApp):
         DBManager.__init__(self)
         Builder.load_file('home_screen.kv')
         Builder.load_file('user_input_screen.kv')
+        Builder.load_file('ai_screen.kv')  # Load the AI screen kv file
         return Builder.load_string(home_page_helper)
 
     def update_fasting_state(self, instance, state):
@@ -148,6 +249,7 @@ class DiabetesManager(MDApp):
     def update_blood_sugar_stats(self, *args):
         db_manager = DBManager()
         avg, low, high = db_manager.get_blood_sugar_stats()
+        a1c = db_manager.update_a1c()
         db_manager.close()
 
         # Update the UI with the retrieved values
@@ -156,12 +258,19 @@ class DiabetesManager(MDApp):
         home_screen.ids.low_value.text = str(round(low)) if low is not None else "N/A"
         home_screen.ids.high_value.text = str(round(high)) if high is not None else "N/A"
 
+        if a1c is not None:
+            home_screen.ids.a1c_value.text = f"{a1c:.2f}%"
+            home_screen.ids.a1c_value.text_color = [0, 1, 0, 1] if a1c < 7.0 else [1, 0, 0, 1]
+        else:
+            home_screen.ids.a1c_value.text = "N/A"
+            home_screen.ids.a1c_value.text_color = [1, 0, 0, 1]
+
     def on_switch_tabs(self, bar, item, item_icon, item_text):
         # Mapping text to screen names
         screen_map = {
             "Home": "home_screen",
             # "Screen 2": "screen_2",
-            # "Screen 3": "screen_3",
+            "AI Helper": "ai_screen",
             # "Screen 4": "screen_4"
         }
         new_screen_name = screen_map.get(item_text)
@@ -169,4 +278,5 @@ class DiabetesManager(MDApp):
             self.root.ids.screen_manager.current = new_screen_name
 
 
-DiabetesManager().run()
+if __name__ == '__main__':
+    DiabetesManager().run()

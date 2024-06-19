@@ -1,5 +1,6 @@
 #:include 'home_screen.kv'
 #:include 'user_input_screen.kv'
+#:include 'ai_screen.kv'
 
 home_page_helper = """
 <BaseMDNavigationItem>
@@ -60,8 +61,8 @@ BoxLayout:
             BaseScreen:
                 name: "Screen 2"
 
-            BaseScreen:
-                name: "Screen 3"
+            AiScreen:
+                name: "ai_screen"
 
             BaseScreen:
                 name: "Screen 4"
@@ -77,7 +78,7 @@ BoxLayout:
             height: "40dp"
 
             BaseMDNavigationItem:
-                icon: "gmail"
+                icon: "home"
                 text: "Home"
                 active: True
                 font_size: "12dp"  # Smaller font size for navigation text
@@ -90,8 +91,8 @@ BoxLayout:
                 icon_size: "24dp"
 
             BaseMDNavigationItem:
-                icon: "linkedin"
-                text: "Screen 3"
+                icon: "comment"
+                text: "AI Helper"
                 font_size: "12dp"
                 icon_size: "24dp"
 
