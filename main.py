@@ -1,8 +1,9 @@
+import logging
 import os
 import threading
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ColorProperty
@@ -33,6 +34,7 @@ system_message = {
                "sugar readings and carb intake."
 }
 
+
 class BaseMDNavigationItem(MDNavigationItem):
     icon = StringProperty()
     text = StringProperty()
@@ -43,6 +45,14 @@ class BaseScreen(MDScreen):
 
 
 class HomeScreen(BaseScreen):
+    pass
+
+
+class HistoryScreen(BaseScreen):
+    pass
+
+
+class ExportScreen(BaseScreen):
     pass
 
 
@@ -118,6 +128,7 @@ class AiScreen(BaseScreen):
         self.ids.message_container.add_widget(message_box)
         self.ids.scroll_view.scroll_y = 0
 
+
 class DBManager:
     def __init__(self):
         self.conn = sqlite3.connect('diabetesmanager.db')
@@ -125,7 +136,7 @@ class DBManager:
         create_table_sql = '''
         CREATE TABLE IF NOT EXISTS user_info(
             id INTEGER PRIMARY KEY,
-            data_time DATETIME,
+            data_time TEXT,
             blood_sugar INTEGER,
             carbs INTEGER,
             fasting INTEGER,
@@ -136,13 +147,23 @@ class DBManager:
         self.conn.commit()
 
     def add_user_data(self, data_time, blood_sugar, carbs, fasting, meal_description):
+        # Check if data_time is a string, and convert if necessary
+        if isinstance(data_time, str):
+            try:
+                data_time = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                logging.error("Incorrect data_time format, should be YYYY-MM-DD HH:MM:SS")
+                return
+
         blood_sugar_value = None if blood_sugar is None else blood_sugar
         fasting_value = None if fasting is None else fasting
         carbs_value = None if carbs is None else carbs
+        # Ensure the data_time is stored as a string in ISO format
+        data_time_str = data_time.strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute('''
             INSERT INTO user_info (data_time, blood_sugar, carbs, fasting, meal_description)
             VALUES (?, ?, ?, ?, ?)
-        ''', (data_time, blood_sugar_value, carbs_value, fasting_value, meal_description))
+        ''', (data_time_str, blood_sugar_value, carbs_value, fasting_value, meal_description))
         self.conn.commit()
 
     def calculate_a1c(self, average_blood_sugar):
@@ -160,14 +181,50 @@ class DBManager:
         return None
 
     def get_blood_sugar_stats(self):
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute('''
             SELECT AVG(blood_sugar), MIN(blood_sugar), MAX(blood_sugar)
             FROM user_info
             WHERE blood_sugar IS NOT NULL
             AND blood_sugar IS NOT ''
-        ''')
+            AND data_time >= ?
+        ''', (thirty_days_ago,))
         result = self.cursor.fetchone()
         return result  # Returns a tuple (avg, min, max)
+
+    # def get_today_data(self):
+    #     today = datetime.now().strftime("%Y-%m-%d")
+    #     print(f"Fetching data for date: {today}")
+    #     self.cursor.execute('''
+    #         SELECT blood_sugar, carbs
+    #         FROM user_info
+    #         WHERE DATE(data_time) = ?
+    #         ORDER BY data_time DESC
+    #         LIMIT 1
+    #     ''', (today,))
+    #     result = self.cursor.fetchone()
+    #     print(f"Retrieved result: {result}")
+    #     return result if result else (None, None)
+
+    def get_today_average_blood_sugar(self):
+        today = datetime.now().strftime("%Y-%m-%d")
+        self.cursor.execute('''
+            SELECT AVG(blood_sugar)
+            FROM user_info
+            WHERE DATE(data_time) = ?
+        ''', (today,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_today_total_carbs(self):
+        today = datetime.now().strftime("%Y-%m-%d")
+        self.cursor.execute('''
+            SELECT SUM(carbs)
+            FROM user_info
+            WHERE DATE(data_time) = ?
+        ''', (today,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
 
     def close(self):
         self.conn.close()
@@ -183,9 +240,12 @@ class DiabetesManager(MDApp):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Purple"
         Clock.schedule_interval(self.update_time, 3)
+        Clock.schedule_once(self.update_today_data, 0)
         Clock.schedule_once(self.update_blood_sugar_stats, 0)
         DBManager.__init__(self)
         Builder.load_file('home_screen.kv')
+        Builder.load_file('history_screen.kv')
+        Builder.load_file('export_screen.kv')
         Builder.load_file('user_input_screen.kv')
         Builder.load_file('ai_screen.kv')  # Load the AI screen kv file
         return Builder.load_string(home_page_helper)
@@ -205,6 +265,17 @@ class DiabetesManager(MDApp):
         self.root.ids.leading_container.add_widget(back_button)
         self.root.ids.leading_container.padding = [0, 0, 10, 0]
 
+    def update_today_data(self, *args):
+        db_manager = DBManager()
+        today_avg_blood_sugar = db_manager.get_today_average_blood_sugar()
+        today_total_carbs = db_manager.get_today_total_carbs()
+        db_manager.close()
+
+        # Update the UI with the retrieved values
+        home_screen = self.root.ids.screen_manager.get_screen('home_screen')
+        home_screen.ids.today_blood_sugar.text = str(today_avg_blood_sugar) if today_avg_blood_sugar is not None else "N/A"
+        home_screen.ids.today_carbs.text = str(today_total_carbs) if today_total_carbs is not None else "N/A"
+
     def save_user_data(self):
         # Retrieve data from UI
         data_time = self.current_time
@@ -213,6 +284,14 @@ class DiabetesManager(MDApp):
         carbs = current_screen.ids.carbs.text if current_screen.ids.carbs.text.strip() != '' else None
         meal_description = current_screen.ids.meal_description.text if current_screen.ids.meal_description.text.strip() != '' else None
         fasting = self.fasting_state
+
+        # Convert current_time to datetime if it is not already
+        if isinstance(data_time, str):
+            try:
+                data_time = datetime.strptime(data_time, "%I:%M %p %m/%d/%y")
+            except ValueError:
+                logging.error("Incorrect current_time format, should be I:M P MM/DD/YY")
+                return
 
         # Save data to database
         db_manager = DBManager()
@@ -269,9 +348,9 @@ class DiabetesManager(MDApp):
         # Mapping text to screen names
         screen_map = {
             "Home": "home_screen",
-            # "Screen 2": "screen_2",
+            "History": "history_screen",
             "AI Helper": "ai_screen",
-            # "Screen 4": "screen_4"
+            "Export": "export_screen"
         }
         new_screen_name = screen_map.get(item_text)
         if new_screen_name:

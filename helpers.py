@@ -1,6 +1,7 @@
 #:include 'home_screen.kv'
 #:include 'user_input_screen.kv'
 #:include 'ai_screen.kv'
+#:include 'history_screen.kv'
 
 home_page_helper = """
 <BaseMDNavigationItem>
@@ -58,14 +59,14 @@ BoxLayout:
             HomeScreen:
                 name: "home_screen"
 
-            BaseScreen:
-                name: "Screen 2"
+            HistoryScreen:
+                name: "history_screen"
 
             AiScreen:
                 name: "ai_screen"
 
-            BaseScreen:
-                name: "Screen 4"
+            ExportScreen:
+                name: "export_screen"
 
             UserInputScreen:
                 name: "user_input_screen"
@@ -85,8 +86,8 @@ BoxLayout:
                 icon_size: "24dp"  # Smaller icon size
 
             BaseMDNavigationItem:
-                icon: "twitter"
-                text: "Screen 2"
+                icon: "history"
+                text: "History"
                 font_size: "12dp"
                 icon_size: "24dp"
 
@@ -97,8 +98,8 @@ BoxLayout:
                 icon_size: "24dp"
 
             BaseMDNavigationItem:
-                icon: "linkedin"
-                text: "Screen 4"
+                icon: "file-export"
+                text: "Export"
                 font_size: "12dp"
                 icon_size: "24dp"
 """

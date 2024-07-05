@@ -131,16 +131,78 @@
 
         MDCard:
             style: "elevated"
-            pos_hint: {"center_x": .5, "center_y": .2}
-            padding: "4dp"
+            pos_hint: {"center_x": .5, "center_y": .4}
+            padding: "8dp"
             size_hint: None, None
-            size: "240dp", "180dp"
+            size: "280dp", "150dp"
             md_bg_color_disabled: "grey"
             theme_shadow_offset: "Custom"
             shadow_offset: (1, -2)
             theme_shadow_softness: "Custom"
             shadow_softness: 1
             theme_elevation_level: "Custom"
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: 1
+
+                MDLabel:
+                    text: "Today"
+                    padding: [0, 35, 0, 0]
+                    halign: 'left'
+                    size_hint_y: None
+                    font_style: "Headline"
+                    role: "small"
+
+                BoxLayout:
+                    orientation: 'horizontal'
+                    padding: "8dp"
+                    spacing: "10dp"
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDLabel:
+                            text: "Avg Blood Sugar"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            id: today_blood_sugar
+                            text: "120"  # Example blood sugar value
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            text: "mg/dl"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDLabel:
+                            text: "Total Carbs"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            id: today_carbs
+                            text: "45"  # Example carbs value
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        MDLabel:
+                            text: "grams"
+                            halign: 'center'
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
         MDFabButton:
             id: button
             icon: "plus"
