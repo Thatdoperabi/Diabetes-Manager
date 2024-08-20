@@ -1,28 +1,11 @@
 <HistoryScreen>:
     BoxLayout:
         orientation: 'vertical'
-        padding: '10dp'
-        spacing: '10dp'
-
-        MDLabel:
-            text: 'History'
-            halign: 'center'
-
-
-        BoxLayout:
-            id: graph_container
-            orientation: 'vertical'
-            size_hint_y: None
-            height: self.minimum_height
-
         ScrollView:
-            do_scroll_x: False
-            do_scroll_y: True
-
-            MDBoxLayout:
+            BoxLayout:
+                id: graph_container
                 orientation: 'vertical'
-                padding: '10dp'
-                spacing: '10dp'
-                adaptive_height: True
-
-                # Add other widgets as needed
+                size_hint_y: None
+                height: self.minimum_height
+                padding: 10
+                spacing: 10

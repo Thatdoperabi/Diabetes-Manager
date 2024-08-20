@@ -1,32 +1,42 @@
 import logging
 import os
 import threading
+
+import asynckivy
 import requests
 import time
 from datetime import datetime, timedelta
 import sqlite3
+
+import self
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ColorProperty
+from kivy.uix.behaviors import ButtonBehavior
+from kivymd.uix.behaviors import RotateBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.expansionpanel import MDExpansionPanel
 from kivymd.uix.label import MDLabel
+from kivymd.uix.list import MDListItemTrailingIcon
 from kivymd.uix.navigationbar import MDNavigationItem
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.screen import MDScreen
+from kivy.metrics import dp
 from kivy.clock import Clock, mainthread
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from dotenv import load_dotenv
+from kivy.uix.label import Label
+from kivy.animation import Animation
+from kivy.garden.graph import Graph, MeshLinePlot
 import socket
 
 from helpers import home_page_helper
 
-# Load environment variables
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
 Window.size = (300, 500)
 
-# Define the system message to set the assistant's persona or rules
 system_message = {
     "role": "system",
     "content": "You are a helpful nutritionists named Rabi who provides clear and concise answers. You specialize in "
@@ -49,11 +59,72 @@ class HomeScreen(BaseScreen):
 
 
 class HistoryScreen(BaseScreen):
-    pass
+    def on_enter(self):
+        self.update_graph()
+
+    def update_graph(self):
+        db_manager = DBManager()
+        data = db_manager.get_last_30_days_aggregated_data()
+        db_manager.close()
+
+        if not data:
+            return
+
+        filtered_data = [(datetime.strptime(row[0], "%Y-%m-%d"), row[1], row[2]) for row in data if row[1] is not None and row[2] is not None]
+        if not filtered_data:
+            return
+
+        dates, avg_blood_sugar, total_carbs = zip(*filtered_data)
+
+        dates = list(dates)[::-1]
+        avg_blood_sugar = list(avg_blood_sugar)[::-1]
+        total_carbs = list(total_carbs)[::-1]
+
+
+        graph = Graph(
+            xlabel='Date',
+            ylabel='Value',
+            x_ticks_minor=1,
+            x_ticks_major=1,
+            y_ticks_major=10,
+            y_grid_label=True,
+            x_grid_label=True,
+            padding=5,
+            xmin=0,
+            xmax=len(dates) - 1 if len(dates) > 1 else 1,
+            ymin=80,
+            ymax=max(max(avg_blood_sugar), max(total_carbs)) + 10,
+            size_hint_y=None,
+            height=150
+        )
+
+        avg_blood_sugar_plot = MeshLinePlot(color=[1, 0, 0, 1])  # Red color
+        avg_blood_sugar_plot.points = [(i, avg_blood_sugar[i]) for i in range(len(avg_blood_sugar))]
+        graph.add_plot(avg_blood_sugar_plot)
+
+        # Create total carbs plot
+        total_carbs_plot = MeshLinePlot(color=[0, 0, 1, 1])  # Blue color
+        total_carbs_plot.points = [(i, total_carbs[i]) for i in range(len(total_carbs))]
+        graph.add_plot(total_carbs_plot)
+
+        # Add the graph to the screen
+        graph_container = self.ids.graph_container
+        graph_container.clear_widgets()
+        graph_container.add_widget(graph)
 
 
 class ExportScreen(BaseScreen):
     pass
+
+
+class ExpansionPanelItem(MDExpansionPanel):
+    ...
+
+
+class TrailingPressedIconButton(
+    ButtonBehavior, RotateBehavior, MDListItemTrailingIcon
+):
+    ...
 
 
 class UserInputScreen(BaseScreen):
@@ -147,7 +218,6 @@ class DBManager:
         self.conn.commit()
 
     def add_user_data(self, data_time, blood_sugar, carbs, fasting, meal_description):
-        # Check if data_time is a string, and convert if necessary
         if isinstance(data_time, str):
             try:
                 data_time = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
@@ -158,7 +228,6 @@ class DBManager:
         blood_sugar_value = None if blood_sugar is None else blood_sugar
         fasting_value = None if fasting is None else fasting
         carbs_value = None if carbs is None else carbs
-        # Ensure the data_time is stored as a string in ISO format
         data_time_str = data_time.strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute('''
             INSERT INTO user_info (data_time, blood_sugar, carbs, fasting, meal_description)
@@ -190,21 +259,32 @@ class DBManager:
             AND data_time >= ?
         ''', (thirty_days_ago,))
         result = self.cursor.fetchone()
-        return result  # Returns a tuple (avg, min, max)
+        return result
 
-    # def get_today_data(self):
-    #     today = datetime.now().strftime("%Y-%m-%d")
-    #     print(f"Fetching data for date: {today}")
-    #     self.cursor.execute('''
-    #         SELECT blood_sugar, carbs
-    #         FROM user_info
-    #         WHERE DATE(data_time) = ?
-    #         ORDER BY data_time DESC
-    #         LIMIT 1
-    #     ''', (today,))
-    #     result = self.cursor.fetchone()
-    #     print(f"Retrieved result: {result}")
-    #     return result if result else (None, None)
+    def get_last_30_days_aggregated_data(self):
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+        self.cursor.execute('''
+            SELECT DATE(data_time), AVG(blood_sugar), SUM(carbs)
+            FROM user_info
+            WHERE data_time >= ?
+            GROUP BY DATE(data_time)
+            ORDER BY DATE(data_time)
+        ''', (thirty_days_ago,))
+        results = self.cursor.fetchall()
+
+        aggregated_data = []
+        date_set = set(row[0] for row in results)
+        current_date = datetime.now().date()
+        for i in range(30):
+            check_date = (current_date - timedelta(days=i)).strftime('%Y-%m-%d')
+            if check_date in date_set:
+                for row in results:
+                    if row[0] == check_date:
+                        aggregated_data.append(row)
+            else:
+                aggregated_data.append((check_date, None, None))
+
+        return aggregated_data
 
     def get_today_average_blood_sugar(self):
         today = datetime.now().strftime("%Y-%m-%d")
@@ -231,10 +311,16 @@ class DBManager:
 
 
 class DiabetesManager(MDApp):
-    icon_color = ColorProperty([0.5, 0.5, 0.5, 1])  # Default gray color in RGBA
+    icon_color = ColorProperty([0.5, 0.5, 0.5, 1])
     current_time = StringProperty()
     fasting_state = None
     dropdown_menu = None
+
+    def on_start(self):
+        async def set_panel_list():
+            for i in range(12):
+                await asynckivy.sleep(0)
+                self.root.ids.container.add_widget(ExpansionPanelItem())
 
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -247,8 +333,22 @@ class DiabetesManager(MDApp):
         Builder.load_file('history_screen.kv')
         Builder.load_file('export_screen.kv')
         Builder.load_file('user_input_screen.kv')
-        Builder.load_file('ai_screen.kv')  # Load the AI screen kv file
+        Builder.load_file('ai_screen.kv')
         return Builder.load_string(home_page_helper)
+
+    def tap_expansion_chevron(
+            self, panel: MDExpansionPanel, chevron: TrailingPressedIconButton
+    ):
+        Animation(
+            padding=[0, dp(12), 0, dp(12)]
+            if not panel.is_open
+            else [0, 0, 0, 0],
+            d=0.2,
+        ).start(panel)
+        panel.open() if not panel.is_open else panel.close()
+        panel.set_chevron_down(
+            chevron
+        ) if not panel.is_open else panel.set_chevron_up(chevron)
 
     def update_fasting_state(self, instance, state):
         self.fasting_state = 1 if state == "Fasting" else 0
@@ -273,7 +373,8 @@ class DiabetesManager(MDApp):
 
         # Update the UI with the retrieved values
         home_screen = self.root.ids.screen_manager.get_screen('home_screen')
-        home_screen.ids.today_blood_sugar.text = str(today_avg_blood_sugar) if today_avg_blood_sugar is not None else "N/A"
+        home_screen.ids.today_blood_sugar.text = str(
+            round(today_avg_blood_sugar)) if today_avg_blood_sugar is not None else "N/A"
         home_screen.ids.today_carbs.text = str(today_total_carbs) if today_total_carbs is not None else "N/A"
 
     def save_user_data(self):
@@ -285,7 +386,6 @@ class DiabetesManager(MDApp):
         meal_description = current_screen.ids.meal_description.text if current_screen.ids.meal_description.text.strip() != '' else None
         fasting = self.fasting_state
 
-        # Convert current_time to datetime if it is not already
         if isinstance(data_time, str):
             try:
                 data_time = datetime.strptime(data_time, "%I:%M %p %m/%d/%y")
@@ -308,7 +408,6 @@ class DiabetesManager(MDApp):
 
     def update_time(self, *args):
         self.current_time = datetime.now().strftime("%I:%M %p %m/%d/%y")
-        # Accessing the specific screen by its name in the ScreenManager
         user_input_screen = self.root.ids.screen_manager.get_screen('user_input_screen')
         if hasattr(user_input_screen, 'ids') and 'sugar_time' in user_input_screen.ids:
             user_input_screen.ids.sugar_time.text = self.current_time
@@ -331,7 +430,6 @@ class DiabetesManager(MDApp):
         a1c = db_manager.update_a1c()
         db_manager.close()
 
-        # Update the UI with the retrieved values
         home_screen = self.root.ids.screen_manager.get_screen('home_screen')
         home_screen.ids.avg_value.text = str(round(avg)) if avg is not None else "N/A"
         home_screen.ids.low_value.text = str(round(low)) if low is not None else "N/A"
@@ -345,7 +443,6 @@ class DiabetesManager(MDApp):
             home_screen.ids.a1c_value.text_color = [1, 0, 0, 1]
 
     def on_switch_tabs(self, bar, item, item_icon, item_text):
-        # Mapping text to screen names
         screen_map = {
             "Home": "home_screen",
             "History": "history_screen",
