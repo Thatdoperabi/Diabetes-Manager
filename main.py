@@ -29,7 +29,7 @@ from kivy.uix.label import Label
 from kivy.animation import Animation
 from kivy.garden.graph import Graph, MeshLinePlot
 import socket
-
+from kivy.uix.togglebutton import ToggleButton
 from helpers import home_page_helper
 
 load_dotenv()
@@ -60,9 +60,9 @@ class HomeScreen(BaseScreen):
 
 class HistoryScreen(BaseScreen):
     def on_enter(self):
-        self.update_graph()
+        self.display_history()
 
-    def update_graph(self):
+    def display_history(self):
         db_manager = DBManager()
         data = db_manager.get_last_30_days_aggregated_data()
         db_manager.close()
@@ -70,47 +70,81 @@ class HistoryScreen(BaseScreen):
         if not data:
             return
 
-        filtered_data = [(datetime.strptime(row[0], "%Y-%m-%d"), row[1], row[2]) for row in data if row[1] is not None and row[2] is not None]
-        if not filtered_data:
-            return
+        container = self.ids.history_container  # Ensure your .kv file has a history_container ID
+        container.clear_widgets()
 
-        dates, avg_blood_sugar, total_carbs = zip(*filtered_data)
+        for row in data:
+            date, avg_blood_sugar, total_carbs = row
+            avg_blood_sugar_text = f"Average Blood Sugar: {avg_blood_sugar}" if avg_blood_sugar is not None else "No data"
+            total_carbs_text = f"Total Carbs: {total_carbs}" if total_carbs is not None else "No data"
 
-        dates = list(dates)[::-1]
-        avg_blood_sugar = list(avg_blood_sugar)[::-1]
-        total_carbs = list(total_carbs)[::-1]
+            # Create a custom expandable panel
+            panel = MDBoxLayout(orientation='vertical', padding=dp(10), size_hint_y=None)
+            panel.bind(minimum_height=panel.setter('height'))
 
+            # Create the header
+            header = ToggleButton(
+                text=date,
+                size_hint_y=None,
+                height=dp(40),
+                group='expansion_panels'
+            )
+            header.bind(on_release=lambda btn, p=panel: self.toggle_panel(p, btn))
 
-        graph = Graph(
-            xlabel='Date',
-            ylabel='Value',
-            x_ticks_minor=1,
-            x_ticks_major=1,
-            y_ticks_major=10,
-            y_grid_label=True,
-            x_grid_label=True,
-            padding=5,
-            xmin=0,
-            xmax=len(dates) - 1 if len(dates) > 1 else 1,
-            ymin=80,
-            ymax=max(max(avg_blood_sugar), max(total_carbs)) + 10,
-            size_hint_y=None,
-            height=150
-        )
+            # Create the expandable content
+            content = MDBoxLayout(orientation='vertical', padding=dp(10), size_hint_y=None, spacing=dp(5))
+            content.bind(minimum_height=content.setter('height'))
 
-        avg_blood_sugar_plot = MeshLinePlot(color=[1, 0, 0, 1])  # Red color
-        avg_blood_sugar_plot.points = [(i, avg_blood_sugar[i]) for i in range(len(avg_blood_sugar))]
-        graph.add_plot(avg_blood_sugar_plot)
+            # Create labels with text size adjustment
+            avg_blood_sugar_label = MDLabel(
+                text=avg_blood_sugar_text,
+                size_hint_y=None,
+                halign="left",
+                valign="middle",
+            )
+            avg_blood_sugar_label.bind(
+                texture_size=lambda instance, value: setattr(avg_blood_sugar_label, 'height', value[1])
+            )
 
-        # Create total carbs plot
-        total_carbs_plot = MeshLinePlot(color=[0, 0, 1, 1])  # Blue color
-        total_carbs_plot.points = [(i, total_carbs[i]) for i in range(len(total_carbs))]
-        graph.add_plot(total_carbs_plot)
+            total_carbs_label = MDLabel(
+                text=total_carbs_text,
+                size_hint_y=None,
+                halign="left",
+                valign="middle",
+            )
+            total_carbs_label.bind(
+                texture_size=lambda instance, value: setattr(total_carbs_label, 'height', value[1])
+            )
 
-        # Add the graph to the screen
-        graph_container = self.ids.graph_container
-        graph_container.clear_widgets()
-        graph_container.add_widget(graph)
+            content.add_widget(avg_blood_sugar_label)
+            content.add_widget(total_carbs_label)
+
+            content.height = 0  # Start with height 0, will expand on toggle
+            content.opacity = 0  # Initially hide the content
+            content.disabled = True
+
+            # Add the header and content to the panel
+            panel.add_widget(header)
+            panel.add_widget(content)
+
+            container.add_widget(panel)
+
+    def toggle_panel(self, panel, button):
+        # Find the content layout inside the panel
+        content = panel.children[0]
+
+        if content.disabled:
+            # Show content
+            content.opacity = 1
+            content.disabled = False
+            content.height = content.minimum_height
+            panel.height += content.height
+        else:
+            # Hide content
+            panel.height -= content.height
+            content.height = 0
+            content.opacity = 0
+            content.disabled = True
 
 
 class ExportScreen(BaseScreen):

@@ -1,11 +1,12 @@
 <HistoryScreen>:
-    BoxLayout:
+    MDBoxLayout:
         orientation: 'vertical'
+
         ScrollView:
-            BoxLayout:
-                id: graph_container
+            MDBoxLayout:
+                id: history_container
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-                padding: 10
-                spacing: 10
+                spacing: dp(10)
+                padding: dp(10)
