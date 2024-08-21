@@ -2,24 +2,77 @@
     MDBoxLayout:
         orientation: 'vertical'
 
+        MDBoxLayout:
+            id: graph_container
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            padding: 10
+            spacing: 10
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: "10dp"
+            padding: [10, 0]
+            spacing: "10dp"
+
+            # Box for Blood Sugar
+            BoxLayout:
+                size_hint: None, None
+                width: dp(15)
+                height: dp(15)
+
+                canvas:
+                    Color:
+                        rgba: 1, 0, 0, 1  # Red color for blood sugar
+                    Rectangle:
+                        size: dp(15), dp(15)  # Force the rectangle to be a square
+                        pos: self.pos
+
+            MDLabel:
+                text: "Blood Sugar"
+                halign: "left"
+                valign: "middle"
+                size_hint_y: None
+                height: "20dp"
+                font_size: "12sp"
+
+            Widget:
+                size_hint_x: None
+                width: "20dp"
+
+            # Box for Carbs
+            BoxLayout:
+                size_hint: None, None
+                width: dp(15)
+                height: dp(15)
+
+                canvas:
+                    Color:
+                        rgba: 0, 0, 1, 1  # Blue color for carbs
+                    Rectangle:
+                        size: dp(15), dp(15)  # Force the rectangle to be a square
+                        pos: self.pos
+
+            MDLabel:
+                text: "Carbs"
+                halign: "left"
+                valign: "middle"
+                size_hint_y: None
+                height: "20dp"
+                font_size: "12sp"
+
+        # Adding spacing between the legend and history container
+        Widget:
+            size_hint_y: None
+            height: "10dp"
+
         ScrollView:
-            MDBoxLayout:  # This becomes the single direct child of the ScrollView
+            MDBoxLayout:
+                id: history_container
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-
-                BoxLayout:
-                    id: graph_container
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: self.minimum_height
-                    padding: 10
-                    spacing: 10
-
-                MDBoxLayout:
-                    id: history_container
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: self.minimum_height
-                    spacing: 0
-                    padding: 0
+                spacing: 0
+                padding: 0
