@@ -18,34 +18,42 @@ BoxLayout:
     orientation: "vertical"
 
     MDBoxLayout:
+        id: top_app_bar_layout  # Ensure this ID matches the one in your Python code
         orientation: 'horizontal'
-        md_bg_color: self.theme_cls.backgroundColor
         size_hint_y: .18
         height: "40dp"
+        padding: [dp(15), 0, dp(15), 0]
 
-        MDTopAppBar:
-            id: top_app_bar
-            type: "small"
-            size_hint_x: 1
+        MDIconButton:
+            id: back_button
+            icon: "arrow-left"
+            size_hint: None, None
+            size: "48dp", "48dp"
+            pos_hint: {'center_y': 0.5}
+            on_release: app.navigate_to_screen()
+            opacity: 0  # Initially hidden
+            disabled: True  # Initially disabled
+            size_hint_x: None  # Prevents taking up space when hidden
+
+        Label:
+            text: "Diabetes Manager"
+            font_size: "14dp"
+            halign: "left"
+            valign: "center"
+            size_hint_x: None
+            width: self.texture_size[0]
+
+        Widget:
+            size_hint_x: 1  # Filler to push icons to the right
+
+        MDIconButton:
+            icon: "dots-vertical"
+            size_hint_x: None
             size_hint_y: None
+            width: "40dp"
             height: "40dp"
-            # pos_hint: {"center_x": .5, "center_y": .5}
+            pos_hint: {"center_y": .5}
 
-            MDTopAppBarLeadingButtonContainer:
-                id: leading_container
-
-            MDTopAppBarTitle:
-                text: "Diabetes Manager"
-                theme_font_size: "Custom"
-                font_size: "14dp"
-                halign: "left"
-                
-            MDTopAppBarTrailingButtonContainer:
-                id: trailing_container
-                MDActionTopAppBarButton:
-                    icon: "dots-vertical"
-                    icon_size: "24dp"
-                    pos_hint: {"center_y": .5}
 
 
     MDBoxLayout:

@@ -354,16 +354,12 @@ class DiabetesManager(MDApp):
         self.fasting_state = 1 if state == "Fasting" else 0
 
     def add_back_button(self):
-        back_button = MDIconButton(
-            icon="arrow-left",
-            pos_hint={'center_y': 0.5},
-            size_hint=(None, None),
-            size=("48dp", "48dp")
-        )
-        back_button.bind(on_release=self.navigate_to_screen)
-        self.root.ids.leading_container.clear_widgets()
-        self.root.ids.leading_container.add_widget(back_button)
-        self.root.ids.leading_container.padding = [0, 0, 10, 0]
+        # Access the back button directly
+        back_button = self.root.ids.back_button
+
+        # Make the back button visible and enabled
+        back_button.opacity = 1
+        back_button.disabled = False
 
     def update_today_data(self, *args):
         db_manager = DBManager()
@@ -401,9 +397,14 @@ class DiabetesManager(MDApp):
         self.update_blood_sugar_stats()
 
     def remove_back_button(self):
-        self.root.ids.leading_container.clear_widgets()
+        # Access the back button directly
+        back_button = self.root.ids.back_button
 
-    def navigate_to_screen(self, instance):
+        # Hide and disable the back button
+        back_button.opacity = 0
+        back_button.disabled = True
+
+    def navigate_to_screen(self, instance=None):
         self.root.ids.screen_manager.current = 'home_screen'
 
     def update_time(self, *args):
