@@ -31,6 +31,7 @@ from kivy.garden.graph import Graph, MeshLinePlot
 import socket
 from kivy.uix.togglebutton import ToggleButton
 from helpers import home_page_helper
+from kivymd.uix.expansionpanel import MDExpansionPanel
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -70,82 +71,60 @@ class HistoryScreen(BaseScreen):
         if not data:
             return
 
-        container = self.ids.history_container  # Ensure your .kv file has a history_container ID
+        container = self.ids.history_container
         container.clear_widgets()
 
         for row in data:
             date, avg_blood_sugar, total_carbs = row
+
+            if avg_blood_sugar is None and total_carbs is None:
+                continue
+
+            if avg_blood_sugar is not None:
+                avg_blood_sugar = round(avg_blood_sugar)
+
             avg_blood_sugar_text = f"Average Blood Sugar: {avg_blood_sugar}" if avg_blood_sugar is not None else "No data"
             total_carbs_text = f"Total Carbs: {total_carbs}" if total_carbs is not None else "No data"
 
-            # Create a custom expandable panel
-            panel = MDBoxLayout(orientation='vertical', padding=dp(10), size_hint_y=None)
-            panel.bind(minimum_height=panel.setter('height'))
+            panel = MDBoxLayout(orientation='vertical', size_hint_y=None)
 
-            # Create the header
             header = ToggleButton(
                 text=date,
                 size_hint_y=None,
                 height=dp(40),
-                group='expansion_panels'
+                group='expansion_panels',
+                background_normal='',
+                background_color=(0.5, 0.5, 0.5, 1),
+                color=(1, 1, 1, 1),
             )
-            header.bind(on_release=lambda btn, p=panel: self.toggle_panel(p, btn))
+            header.bind(on_release=lambda btn, p=panel: self.toggle_panel(p))
 
-            # Create the expandable content
-            content = MDBoxLayout(orientation='vertical', padding=dp(10), size_hint_y=None, spacing=dp(5))
-            content.bind(minimum_height=content.setter('height'))
+            content_box = MDBoxLayout(orientation='vertical', size_hint_y=None, height=0, opacity=0)
+            content_box.add_widget(MDLabel(text=avg_blood_sugar_text, size_hint_y=None, height=dp(20), halign="left"))
+            content_box.add_widget(MDLabel(text=total_carbs_text, size_hint_y=None, height=dp(20), halign="left"))
 
-            # Create labels with text size adjustment
-            avg_blood_sugar_label = MDLabel(
-                text=avg_blood_sugar_text,
-                size_hint_y=None,
-                halign="left",
-                valign="middle",
-            )
-            avg_blood_sugar_label.bind(
-                texture_size=lambda instance, value: setattr(avg_blood_sugar_label, 'height', value[1])
-            )
-
-            total_carbs_label = MDLabel(
-                text=total_carbs_text,
-                size_hint_y=None,
-                halign="left",
-                valign="middle",
-            )
-            total_carbs_label.bind(
-                texture_size=lambda instance, value: setattr(total_carbs_label, 'height', value[1])
-            )
-
-            content.add_widget(avg_blood_sugar_label)
-            content.add_widget(total_carbs_label)
-
-            content.height = 0  # Start with height 0, will expand on toggle
-            content.opacity = 0  # Initially hide the content
-            content.disabled = True
-
-            # Add the header and content to the panel
             panel.add_widget(header)
-            panel.add_widget(content)
+            panel.add_widget(content_box)
+
+            panel.height = dp(40)
+            panel.size_hint_y = None
 
             container.add_widget(panel)
 
-    def toggle_panel(self, panel, button):
-        # Find the content layout inside the panel
-        content = panel.children[0]
+    def toggle_panel(self, panel):
+        content_box = panel.children[0]
 
-        if content.disabled:
-            # Show content
-            content.opacity = 1
-            content.disabled = False
-            content.height = content.minimum_height
-            panel.height += content.height
+        if content_box.height == 0:
+            content_box.height = dp(40)
+            content_box.opacity = 1
+            panel.height = dp(40) + content_box.height
         else:
-            # Hide content
-            panel.height -= content.height
-            content.height = 0
-            content.opacity = 0
-            content.disabled = True
+            content_box.height = 0
+            content_box.opacity = 0
+            panel.height = dp(40)
 
+        panel.size_hint_y = None
+        panel.do_layout()
 
 class ExportScreen(BaseScreen):
     pass
@@ -388,10 +367,8 @@ class DiabetesManager(MDApp):
         self.fasting_state = 1 if state == "Fasting" else 0
 
     def add_back_button(self):
-        # Access the back button directly
         back_button = self.root.ids.back_button
 
-        # Make the back button visible and enabled
         back_button.opacity = 1
         back_button.disabled = False
 
@@ -401,14 +378,12 @@ class DiabetesManager(MDApp):
         today_total_carbs = db_manager.get_today_total_carbs()
         db_manager.close()
 
-        # Update the UI with the retrieved values
         home_screen = self.root.ids.screen_manager.get_screen('home_screen')
         home_screen.ids.today_blood_sugar.text = str(
             round(today_avg_blood_sugar)) if today_avg_blood_sugar is not None else "N/A"
         home_screen.ids.today_carbs.text = str(today_total_carbs) if today_total_carbs is not None else "N/A"
 
     def save_user_data(self):
-        # Retrieve data from UI
         data_time = self.current_time
         current_screen = self.root.ids.screen_manager.current_screen
         blood_sugar = current_screen.ids.blood_sugar_input.text if current_screen.ids.blood_sugar_input.text.strip() != '' else None
@@ -423,7 +398,6 @@ class DiabetesManager(MDApp):
                 logging.error("Incorrect current_time format, should be I:M P MM/DD/YY")
                 return
 
-        # Save data to database
         db_manager = DBManager()
         db_manager.add_user_data(data_time, blood_sugar, carbs, fasting, meal_description)
         db_manager.close()
@@ -431,10 +405,8 @@ class DiabetesManager(MDApp):
         self.update_blood_sugar_stats()
 
     def remove_back_button(self):
-        # Access the back button directly
         back_button = self.root.ids.back_button
 
-        # Hide and disable the back button
         back_button.opacity = 0
         back_button.disabled = True
 
