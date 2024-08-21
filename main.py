@@ -62,6 +62,57 @@ class HomeScreen(BaseScreen):
 class HistoryScreen(BaseScreen):
     def on_enter(self):
         self.display_history()
+        self.update_graph()
+
+    def update_graph(self):
+        db_manager = DBManager()
+        data = db_manager.get_last_30_days_aggregated_data()
+        db_manager.close()
+
+        if not data:
+            return
+
+        filtered_data = [(datetime.strptime(row[0], "%Y-%m-%d"), row[1], row[2]) for row in data if row[1] is not None and row[2] is not None]
+        if not filtered_data:
+            return
+
+        dates, avg_blood_sugar, total_carbs = zip(*filtered_data)
+
+        dates = list(dates)[::-1]
+        avg_blood_sugar = list(avg_blood_sugar)[::-1]
+        total_carbs = list(total_carbs)[::-1]
+
+
+        graph = Graph(
+            xlabel='Date',
+            ylabel='Value',
+            x_ticks_minor=1,
+            x_ticks_major=1,
+            y_ticks_major=10,
+            y_grid_label=True,
+            x_grid_label=True,
+            padding=5,
+            xmin=0,
+            xmax=len(dates) - 1 if len(dates) > 1 else 1,
+            ymin=80,
+            ymax=max(max(avg_blood_sugar), max(total_carbs)) + 10,
+            size_hint_y=None,
+            height=150
+        )
+
+        avg_blood_sugar_plot = MeshLinePlot(color=[1, 0, 0, 1])  # Red color
+        avg_blood_sugar_plot.points = [(i, avg_blood_sugar[i]) for i in range(len(avg_blood_sugar))]
+        graph.add_plot(avg_blood_sugar_plot)
+
+        # Create total carbs plot
+        total_carbs_plot = MeshLinePlot(color=[0, 0, 1, 1])  # Blue color
+        total_carbs_plot.points = [(i, total_carbs[i]) for i in range(len(total_carbs))]
+        graph.add_plot(total_carbs_plot)
+
+        # Add the graph to the screen
+        graph_container = self.ids.graph_container
+        graph_container.clear_widgets()
+        graph_container.add_widget(graph)
 
     def display_history(self):
         db_manager = DBManager()
