@@ -12,6 +12,7 @@ import self
 from kivy.core.window import Window
 from kivy.properties import StringProperty, ColorProperty
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.behaviors import RotateBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.expansionpanel import MDExpansionPanel
@@ -49,6 +50,16 @@ system_message = {
 class BaseMDNavigationItem(MDNavigationItem):
     icon = StringProperty()
     text = StringProperty()
+
+class NavigationItem(BoxLayout):
+    screen_name = StringProperty('')
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            app = MDApp.get_running_app()
+            app.switch_to_tab(self.screen_name)
+            return True  # Consume the touch event so it doesn't propagate further
+        return super().on_touch_down(touch)
 
 
 class BaseScreen(MDScreen):
@@ -455,6 +466,9 @@ class DiabetesManager(MDApp):
 
         self.update_blood_sugar_stats()
 
+        self.update_today_data()
+
+        self.root.ids.screen_manager.current = 'home_screen'
     def remove_back_button(self):
         back_button = self.root.ids.back_button
 
@@ -499,6 +513,10 @@ class DiabetesManager(MDApp):
         else:
             home_screen.ids.a1c_value.text = "N/A"
             home_screen.ids.a1c_value.text_color = [1, 0, 0, 1]
+
+    def switch_to_tab(self, screen_name):
+        # Set the current screen in the ScreenManager
+        self.root.ids.screen_manager.current = screen_name
 
     def on_switch_tabs(self, bar, item, item_icon, item_text):
         screen_map = {

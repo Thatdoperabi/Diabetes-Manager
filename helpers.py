@@ -3,6 +3,7 @@
 #:include 'ai_screen.kv'
 #:include 'history_screen.kv'
 
+
 home_page_helper = """
 <BaseMDNavigationItem>
     MDNavigationItemIcon:
@@ -82,32 +83,152 @@ BoxLayout:
                 on_enter: app.add_back_button()
                 on_leave: app.remove_back_button()
 
-        MDNavigationBar:
-            on_switch_tabs: app.on_switch_tabs(*args)
-            height: "40dp"
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: "60dp"
+            padding: [dp(5), dp(0), dp(5), dp(5)]  # Remove top padding, add bottom padding
+            spacing: "10dp"
 
-            BaseMDNavigationItem:
-                icon: "home"
-                text: "Home"
-                active: True
-                font_size: "12dp"  # Smaller font size for navigation text
-                icon_size: "24dp"  # Smaller icon size
+            # First item
+            NavigationItem:
+                orientation: 'vertical'
+                size_hint: 1, None
+                screen_name: 'home_screen'
+                
+                Widget:
+                    size_hint_y: None
+                    height: dp(5)
 
-            BaseMDNavigationItem:
-                icon: "history"
-                text: "History"
-                font_size: "12dp"
-                icon_size: "24dp"
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(30)
 
-            BaseMDNavigationItem:
-                icon: "comment"
-                text: "AI Helper"
-                font_size: "12dp"
-                icon_size: "24dp"
+                    Widget:
+                        size_hint_x: 1
 
-            BaseMDNavigationItem:
-                icon: "file-export"
-                text: "Export"
-                font_size: "12dp"
-                icon_size: "24dp"
+                    MDIconButton:
+                        icon: "home"
+                        size_hint: None, None
+                        size: "24dp", "24dp"
+                        valign: "center"
+                        halign: "center"
+
+                    Widget:
+                        size_hint_x: 1
+
+                MDLabel:
+                    text: "Home"
+                    halign: "center"
+                    size_hint_y: None
+                    height: "20dp"
+                    font_size: "12sp"
+
+            # Second item
+            NavigationItem:
+                orientation: 'vertical'
+                size_hint: 1, None
+                screen_name: 'history_screen'
+                
+                
+                Widget:
+                    size_hint_y: None
+                    height: dp(5)
+
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(30)
+
+                    Widget:
+                        size_hint_x: 1
+
+                    MDIconButton:
+                        icon: "history"
+                        size_hint: None, None
+                        size: "24dp", "24dp"
+                        valign: "center"
+                        halign: "center"
+
+                    Widget:
+                        size_hint_x: 1
+
+                MDLabel:
+                    text: "History"
+                    halign: "center"
+                    size_hint_y: None
+                    height: "20dp"
+                    font_size: "12sp"
+
+            # Third item
+            NavigationItem:
+                orientation: 'vertical'
+                size_hint: 1, None
+                on_touch_down:
+                screen_name: 'ai_screen'
+                
+                Widget:
+                    size_hint_y: None
+                    height: dp(5)
+
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(30)
+
+                    Widget:
+                        size_hint_x: 1
+
+                    MDIconButton:
+                        icon: "comment"
+                        size_hint: None, None
+                        size: "24dp", "24dp"
+                        valign: "center"
+                        halign: "center"
+
+                    Widget:
+                        size_hint_x: 1
+
+                MDLabel:
+                    text: "AI Helper"
+                    halign: "center"
+                    size_hint_y: None
+                    height: "20dp"
+                    font_size: "12sp"
+
+            # Fourth item
+            NavigationItem:
+                orientation: 'vertical'
+                size_hint: 1, None
+                screen_name: 'export_screen'
+                
+                Widget:
+                    size_hint_y: None
+                    height: dp(5)
+
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: dp(30)
+
+                    Widget:
+                        size_hint_x: 1
+
+                    MDIconButton:
+                        icon: "file-export"
+                        size_hint: None, None
+                        size: "24dp", "24dp"
+                        valign: "center"
+                        halign: "center"
+
+                    Widget:
+                        size_hint_x: 1
+
+                MDLabel:
+                    text: "Export"
+                    halign: "center"
+                    size_hint_y: None
+                    height: "20dp"
+                    font_size: "12sp"
 """
