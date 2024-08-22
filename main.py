@@ -576,21 +576,56 @@ class DiabetesManager(MDApp):
         print(f"Exported calendar to {file_name}")
 
     def export_to_csv(self):
-        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.csv"
+        from kivy.utils import platform  # Ensure platform is imported
+
+        # Determine the directory to save the file
+        if platform == 'android':
+            from android.storage import primary_external_storage_path
+            downloads_dir = os.path.join(primary_external_storage_path(), "Download")
+        else:
+            downloads_dir = os.path.expanduser("~")
+
+        if not os.path.exists(downloads_dir):
+            os.makedirs(downloads_dir)
+
+        file_name = os.path.join(downloads_dir, f"calendar_export_{datetime.now().strftime('%Y%m%d')}.csv")
+
+        # Retrieve the calendar data
         data = self.get_calendar_data()
+
+        # Write the data to a CSV file
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['Date', 'Average Blood Sugar', 'Total Carbs'])
+            writer.writerow(['Date', 'Average Blood Sugar', 'Total Carbs'])  # Header row
             for row in data:
                 writer.writerow(row)
-        print(f"Exported to CSV: {file_name}")
+
+        print(f"Exported calendar to CSV: {file_name}")
 
     def export_to_excel(self):
-        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        from kivy.utils import platform
+
+
+        if platform == 'android':
+            from android.storage import primary_external_storage_path
+            downloads_dir = os.path.join(primary_external_storage_path(), "Download")
+        else:
+            downloads_dir = os.path.expanduser("~")
+
+        if not os.path.exists(downloads_dir):
+            os.makedirs(downloads_dir)
+
+        file_name = os.path.join(downloads_dir, f"calendar_export_{datetime.now().strftime('%Y%m%d')}.xlsx")
+
+
         data = self.get_calendar_data()
+
+
         df = pd.DataFrame(data, columns=['Date', 'Average Blood Sugar', 'Total Carbs'])
+
         df.to_excel(file_name, index=False)
-        print(f"Exported to Excel: {file_name}")
+
+        print(f"Exported calendar to Excel: {file_name}")
 
     def get_calendar_data(self):
         db_manager = DBManager()
