@@ -1,3 +1,4 @@
+import calendar
 import logging
 import os
 import threading
@@ -189,7 +190,51 @@ class HistoryScreen(BaseScreen):
         panel.do_layout()
 
 class ExportScreen(BaseScreen):
-    pass
+    def on_enter(self):
+        self.populate_calendar()
+        self.ids.month_label.text = f"{datetime.now().strftime('%B %Y')}"
+
+    def populate_calendar(self):
+        calendar_grid = self.ids.calendar_grid
+        calendar_grid.clear_widgets()
+
+        today = datetime.today()
+        year = today.year
+        month = today.month
+
+        # Update the month label at the top
+        self.ids.month_label.text = f"{today.strftime('%B %Y')}"
+
+        # Get the first day of the month and the total number of days
+        first_day_of_month, total_days = calendar.monthrange(year, month)
+
+        db_manager = DBManager()
+
+        for day in range(1, total_days + 1):
+            # Fetch data for this specific day
+            date_str = f"{year}-{month:02d}-{day:02d}"
+            avg_blood_sugar = db_manager.get_average_blood_sugar_for_date(date_str)
+            total_carbs = db_manager.get_total_carbs_for_date(date_str)
+
+            cell_text = f"[size=12][b]{day}[/b][/size]\n[size=12][color=#FF0000]{avg_blood_sugar or 'N/A'}[/color][/size]\n[size=10][color=#0000FF]{total_carbs or 'N/A'}[/color][/size]"
+
+            # Add empty labels for days before the first of the month
+            if day == 1:
+                for _ in range(first_day_of_month):
+                    calendar_grid.add_widget(MDLabel())
+
+            # Add the day cell
+            calendar_grid.add_widget(MDLabel(
+                text=cell_text,
+                markup=True,
+                halign="center",
+                valign="middle",
+                size_hint=(1, None),  # Ensure the cell uses the available width
+                height=dp(80),  # Adjust the height to fit the content
+                theme_text_color="Secondary",
+            ))
+
+        db_manager.close()
 
 
 class ExpansionPanelItem(MDExpansionPanel):
@@ -380,6 +425,24 @@ class DBManager:
         ''', (today,))
         result = self.cursor.fetchone()
         return result[0] if result else None
+
+    def get_average_blood_sugar_for_date(self, date_str):
+        self.cursor.execute('''
+            SELECT AVG(blood_sugar)
+            FROM user_info
+            WHERE DATE(data_time) = ?
+        ''', (date_str,))
+        result = self.cursor.fetchone()
+        return round(result[0], 2) if result[0] is not None else None
+
+    def get_total_carbs_for_date(self, date_str):
+        self.cursor.execute('''
+            SELECT SUM(carbs)
+            FROM user_info
+            WHERE DATE(data_time) = ?
+        ''', (date_str,))
+        result = self.cursor.fetchone()
+        return result[0] if result[0] is not None else None
 
     def close(self):
         self.conn.close()

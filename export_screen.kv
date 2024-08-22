@@ -1,1 +1,55 @@
 <ExportScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: [dp(10), dp(10), dp(10), dp(10)]
+
+        MDLabel:
+            id: month_label
+            halign: "center"
+            size_hint_y: None
+            height: dp(40)
+            padding_y: dp(10)
+
+        ScrollView:
+            size_hint_y: 1  # Allow the ScrollView to take up the remaining vertical space
+            do_scroll_x: False  # Disable horizontal scrolling
+            do_scroll_y: True  # Enable vertical scrolling
+
+            GridLayout:
+                id: calendar_grid
+                cols: 7
+                size_hint_y: None
+                height: self.minimum_height  # Dynamically calculate the height based on content
+                spacing: dp(2)
+                row_default_height: dp(80)
+                row_force_default: True
+
+                # Days of the week headers
+                MDLabel:
+                    text: "Sun"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Mon"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Tue"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Wed"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Thu"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Fri"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                MDLabel:
+                    text: "Sat"
+                    halign: "center"
+                    theme_text_color: "Secondary"
