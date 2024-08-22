@@ -10,6 +10,60 @@
             height: dp(40)
             padding_y: dp(10)
 
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(30)  # Adjust height for the initials
+
+            MDLabel:
+                text: "S"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "M"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "T"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "W"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "T"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "F"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
+            MDLabel:
+                text: "S"
+                halign: "center"
+                size_hint_x: None
+                width: dp(40)
+                theme_text_color: "Secondary"
+
         ScrollView:
             size_hint_y: 1  # Allow the ScrollView to take up the remaining vertical space
             do_scroll_x: False  # Disable horizontal scrolling
@@ -24,32 +78,24 @@
                 row_default_height: dp(80)
                 row_force_default: True
 
-                # Days of the week headers
-                MDLabel:
-                    text: "Sun"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Mon"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Tue"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Wed"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Thu"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Fri"
-                    halign: "center"
-                    theme_text_color: "Secondary"
-                MDLabel:
-                    text: "Sat"
-                    halign: "center"
-                    theme_text_color: "Secondary"
+                # Calendar days will be populated dynamically
+
+        Widget:
+            size_hint_y: None
+            height: "10dp"
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(50)
+            padding: [dp(10), dp(10)]  # Ensure padding around the button
+            Button:
+                text: "Export"
+                size_hint_x: 1  # Ensure the button fills the entire width
+                background_normal: ''
+                background_color: 0.2, 0.6, 0.86, 1  # Set your desired color
+                color: [1, 1, 1, 1]  # White text color
+                on_release: app.open_export_modal()
+
+        Widget:  # Spacer below the button
+            size_hint_y: None
+            height: "10dp"

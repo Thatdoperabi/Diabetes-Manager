@@ -1,6 +1,7 @@
 import calendar
 import logging
 import os
+import re
 import threading
 
 import asynckivy
@@ -11,9 +12,11 @@ import sqlite3
 
 import self
 from kivy.core.window import Window
+from kivy.metrics import dp
 from kivy.properties import StringProperty, ColorProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.modalview import ModalView
 from kivymd.uix.behaviors import RotateBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.expansionpanel import MDExpansionPanel
@@ -22,7 +25,9 @@ from kivymd.uix.list import MDListItemTrailingIcon
 from kivymd.uix.navigationbar import MDNavigationItem
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.screen import MDScreen
-from kivy.metrics import dp
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch  # Import the inch unit
+from reportlab.pdfgen import canvas
 from kivy.clock import Clock, mainthread
 from kivy.lang import Builder
 from kivymd.app import MDApp
@@ -30,6 +35,11 @@ from dotenv import load_dotenv
 from kivy.uix.label import Label
 from kivy.animation import Animation
 from kivy.garden.graph import Graph, MeshLinePlot
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from kivy.uix.modalview import ModalView
+import csv
+import pandas as pd
 import socket
 from kivy.uix.togglebutton import ToggleButton
 from helpers import home_page_helper
@@ -68,6 +78,9 @@ class BaseScreen(MDScreen):
 
 
 class HomeScreen(BaseScreen):
+    pass
+
+class ExportModal(ModalView):
     pass
 
 
@@ -193,6 +206,8 @@ class ExportScreen(BaseScreen):
     def on_enter(self):
         self.populate_calendar()
         self.ids.month_label.text = f"{datetime.now().strftime('%B %Y')}"
+
+
 
     def populate_calendar(self):
         calendar_grid = self.ids.calendar_grid
@@ -472,6 +487,7 @@ class DiabetesManager(MDApp):
         Builder.load_file('export_screen.kv')
         Builder.load_file('user_input_screen.kv')
         Builder.load_file('ai_screen.kv')
+        Builder.load_file('export_modal.kv')
         return Builder.load_string(home_page_helper)
 
     def tap_expansion_chevron(
@@ -490,6 +506,87 @@ class DiabetesManager(MDApp):
 
     def update_fasting_state(self, instance, state):
         self.fasting_state = 1 if state == "Fasting" else 0
+
+    def open_export_modal(self):
+        modal = ExportModal()
+        modal.open()
+
+    def export_to_pdf(self):
+        # Access the ExportScreen and then get the calendar_grid
+        export_screen = self.root.ids.screen_manager.get_screen('export_screen')
+        calendar_grid = export_screen.ids.calendar_grid
+
+        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.pdf"
+        c = canvas.Canvas(file_name, pagesize=letter)
+        c.setFont("Helvetica", 10)
+
+        width, height = letter
+        c.drawString(0.5 * inch, height - 0.5 * inch, "")
+
+        # Add the month and year at the top, centered
+        month_year = datetime.now().strftime("%B %Y")
+        c.setFont("Helvetica-Bold", 12)
+        text_width = c.stringWidth(month_year, "Helvetica-Bold", 12)
+        c.drawString((width - text_width) / 2, height - 1.0 * inch, month_year)
+
+        cell_width = inch * 1.0  # Cell width
+        cell_height = inch * 0.8  # Cell height
+
+        def strip_markup(text):
+            # Remove Kivy markup tags using regex
+            return re.sub(r'\[.*?\]', '', text)
+
+        for i, widget in enumerate(calendar_grid.children[::-1]):
+            if isinstance(widget, MDLabel):
+                text = strip_markup(widget.text.strip())
+
+                # Split the text into lines
+                lines = text.splitlines()
+                date_line = lines[0] if lines else ""  # The date should be the first line
+                data_lines = lines[1:]  # The rest are data lines
+
+                x = (i % 7) * cell_width + 0.5 * inch
+                y = height - (2.0 * inch + (i // 7) * cell_height)
+
+                # Draw the date in the top left corner
+                c.drawString(x + 1, y - 1, date_line)  # Positioning the date closer to the top left
+
+                # Center-align the data lines within the cell
+                y_offset = 0.45 * inch  # Center the data vertically in the cell
+                for line in data_lines:
+                    line_width = c.stringWidth(line, "Helvetica", 10)
+                    c.drawString(x + (cell_width - line_width) / 2, y - y_offset, line)
+                    y_offset -= 12  # Adjust for the next line within the cell
+
+                # Draw a border around the cell
+                c.setStrokeColorRGB(0, 0, 0)
+                c.rect(x, y - cell_height + 0.15 * inch, cell_width, cell_height, stroke=1, fill=0)
+
+        c.save()
+        print(f"Exported calendar to {file_name}")
+
+    def export_to_csv(self):
+        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.csv"
+        data = self.get_calendar_data()
+        with open(file_name, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Date', 'Average Blood Sugar', 'Total Carbs'])
+            for row in data:
+                writer.writerow(row)
+        print(f"Exported to CSV: {file_name}")
+
+    def export_to_excel(self):
+        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        data = self.get_calendar_data()
+        df = pd.DataFrame(data, columns=['Date', 'Average Blood Sugar', 'Total Carbs'])
+        df.to_excel(file_name, index=False)
+        print(f"Exported to Excel: {file_name}")
+
+    def get_calendar_data(self):
+        db_manager = DBManager()
+        data = db_manager.get_last_30_days_aggregated_data()
+        db_manager.close()
+        return data
 
     def add_back_button(self):
         back_button = self.root.ids.back_button

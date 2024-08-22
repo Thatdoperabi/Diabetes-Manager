@@ -1,9 +1,3 @@
-#:include 'home_screen.kv'
-#:include 'user_input_screen.kv'
-#:include 'ai_screen.kv'
-#:include 'history_screen.kv'
-
-
 home_page_helper = """
 <BaseMDNavigationItem>
     MDNavigationItemIcon:
@@ -19,7 +13,7 @@ BoxLayout:
     orientation: "vertical"
 
     MDBoxLayout:
-        id: top_app_bar_layout  # Ensure this ID matches the one in your Python code
+        id: top_app_bar_layout
         orientation: 'horizontal'
         size_hint_y: .18
         height: "40dp"
@@ -32,9 +26,9 @@ BoxLayout:
             size: "48dp", "48dp"
             pos_hint: {'center_y': 0.5}
             on_release: app.navigate_to_screen()
-            opacity: 0  # Initially hidden
-            disabled: True  # Initially disabled
-            size_hint_x: None  # Prevents taking up space when hidden
+            opacity: 0
+            disabled: True
+            size_hint_x: None
 
         Label:
             text: "Diabetes Manager"
@@ -54,8 +48,6 @@ BoxLayout:
             width: "40dp"
             height: "40dp"
             pos_hint: {"center_y": .5}
-
-
 
     MDBoxLayout:
         orientation: 'vertical'
@@ -87,36 +79,25 @@ BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
             height: "60dp"
-            padding: [dp(5), dp(0), dp(5), dp(5)]  # Remove top padding, add bottom padding
+            padding: [dp(5), dp(0), dp(5), dp(5)]
             spacing: "10dp"
 
-            # First item
-            NavigationItem:
+            # Home
+            BoxLayout:
                 orientation: 'vertical'
-                size_hint: 1, None
-                screen_name: 'home_screen'
-                
+                size_hint: None, None
+                width: dp(60)
+                height: "60dp"
+
                 Widget:
-                    size_hint_y: None
-                    height: dp(5)
+                    size_hint_y: 1
 
-                MDBoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(30)
-
-                    Widget:
-                        size_hint_x: 1
-
-                    MDIconButton:
-                        icon: "home"
-                        size_hint: None, None
-                        size: "24dp", "24dp"
-                        valign: "center"
-                        halign: "center"
-
-                    Widget:
-                        size_hint_x: 1
+                MDIconButton:
+                    icon: "home"
+                    size_hint: None, None
+                    size: "40dp", "40dp"
+                    pos_hint: {"center_x": .5}
+                    on_release: app.root.ids.screen_manager.current = 'home_screen'
 
                 MDLabel:
                     text: "Home"
@@ -124,35 +105,27 @@ BoxLayout:
                     size_hint_y: None
                     height: "20dp"
                     font_size: "12sp"
+                    pos_hint: {"center_x": .5}
 
-            # Second item
-            NavigationItem:
-                orientation: 'vertical'
-                size_hint: 1, None
-                screen_name: 'history_screen'
-                
-                
                 Widget:
-                    size_hint_y: None
-                    height: dp(5)
+                    size_hint_y: 1
 
-                MDBoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(30)
+            # History
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: None, None
+                width: dp(60)
+                height: "60dp"
 
-                    Widget:
-                        size_hint_x: 1
+                Widget:
+                    size_hint_y: 1
 
-                    MDIconButton:
-                        icon: "history"
-                        size_hint: None, None
-                        size: "24dp", "24dp"
-                        valign: "center"
-                        halign: "center"
-
-                    Widget:
-                        size_hint_x: 1
+                MDIconButton:
+                    icon: "history"
+                    size_hint: None, None
+                    size: "40dp", "40dp"
+                    pos_hint: {"center_x": .5}
+                    on_release: app.root.ids.screen_manager.current = 'history_screen'
 
                 MDLabel:
                     text: "History"
@@ -160,35 +133,27 @@ BoxLayout:
                     size_hint_y: None
                     height: "20dp"
                     font_size: "12sp"
+                    pos_hint: {"center_x": .5}
 
-            # Third item
-            NavigationItem:
-                orientation: 'vertical'
-                size_hint: 1, None
-                on_touch_down:
-                screen_name: 'ai_screen'
-                
                 Widget:
-                    size_hint_y: None
-                    height: dp(5)
+                    size_hint_y: 1
 
-                MDBoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(30)
+            # AI Helper
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: None, None
+                width: dp(60)
+                height: "60dp"
 
-                    Widget:
-                        size_hint_x: 1
+                Widget:
+                    size_hint_y: 1
 
-                    MDIconButton:
-                        icon: "comment"
-                        size_hint: None, None
-                        size: "24dp", "24dp"
-                        valign: "center"
-                        halign: "center"
-
-                    Widget:
-                        size_hint_x: 1
+                MDIconButton:
+                    icon: "comment"
+                    size_hint: None, None
+                    size: "40dp", "40dp"
+                    pos_hint: {"center_x": .5}
+                    on_release: app.root.ids.screen_manager.current = 'ai_screen'
 
                 MDLabel:
                     text: "AI Helper"
@@ -196,34 +161,27 @@ BoxLayout:
                     size_hint_y: None
                     height: "20dp"
                     font_size: "12sp"
+                    pos_hint: {"center_x": .5}
 
-            # Fourth item
-            NavigationItem:
-                orientation: 'vertical'
-                size_hint: 1, None
-                screen_name: 'export_screen'
-                
                 Widget:
-                    size_hint_y: None
-                    height: dp(5)
+                    size_hint_y: 1
 
-                MDBoxLayout:
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(30)
+            # Export
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: None, None
+                width: dp(60)
+                height: "60dp"
 
-                    Widget:
-                        size_hint_x: 1
+                Widget:
+                    size_hint_y: 1
 
-                    MDIconButton:
-                        icon: "file-export"
-                        size_hint: None, None
-                        size: "24dp", "24dp"
-                        valign: "center"
-                        halign: "center"
-
-                    Widget:
-                        size_hint_x: 1
+                MDIconButton:
+                    icon: "file-export"
+                    size_hint: None, None
+                    size: "40dp", "40dp"
+                    pos_hint: {"center_x": .5}
+                    on_release: app.root.ids.screen_manager.current = 'export_screen'
 
                 MDLabel:
                     text: "Export"
@@ -231,4 +189,8 @@ BoxLayout:
                     size_hint_y: None
                     height: "20dp"
                     font_size: "12sp"
+                    pos_hint: {"center_x": .5}
+
+                Widget:
+                    size_hint_y: 1
 """

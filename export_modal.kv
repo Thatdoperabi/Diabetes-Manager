@@ -1,0 +1,58 @@
+<ExportModal>:
+    size_hint: None, None
+    size: dp(300), dp(250)
+    auto_dismiss: False
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [dp(20), dp(20), dp(20), dp(20)]
+        spacing: dp(5)  # Add spacing between the elements
+
+        MDIconButton:
+            icon: "arrow-left"
+            size_hint: None, None
+            size: "48dp", "48dp"
+            pos_hint: {"center_x": 0.05}
+            on_release: root.dismiss()  # Close the modal
+
+        Widget:  # Spacer to create space between the arrow and the buttons
+            size_hint_y: None
+            height: dp(10)
+
+        Button:
+            text: "PDF"
+            pos_hint: {"center_x": .5}
+            size_hint_y: None
+            height: dp(40)
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.86, 1  # Replace with desired RGBA color
+            color: [1, 1, 1, 1]  # Set text color to white
+            on_release: app.export_to_pdf()  # Function to export PDF
+
+        Widget:  # Spacer to create space between the buttons
+            size_hint_y: None
+            height: dp(10)
+
+        Button:
+            text: "CSV"
+            pos_hint: {"center_x": .5}
+            size_hint_y: None
+            height: dp(40)
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.86, 1  # Replace with desired RGBA color
+            color: [1, 1, 1, 1]  # Set text color to white
+            on_release: app.export_to_csv()  # Function to export CSV
+
+        Widget:  # Spacer to create space between the buttons
+            size_hint_y: None
+            height: dp(10)
+
+        Button:
+            text: "Excel"
+            pos_hint: {"center_x": .5}
+            size_hint_y: None
+            height: dp(40)
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.86, 1  # Replace with desired RGBA color
+            color: [1, 1, 1, 1]  # Set text color to white
+            on_release: app.export_to_excel()  # Function to export Excel
