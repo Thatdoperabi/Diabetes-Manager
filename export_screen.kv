@@ -13,7 +13,7 @@
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
-            height: dp(30)  # Adjust height for the initials
+            height: dp(30)
 
             MDLabel:
                 text: "S"
@@ -65,20 +65,20 @@
                 theme_text_color: "Secondary"
 
         ScrollView:
-            size_hint_y: 1  # Allow the ScrollView to take up the remaining vertical space
-            do_scroll_x: False  # Disable horizontal scrolling
-            do_scroll_y: True  # Enable vertical scrolling
+            size_hint_y: 1
+            do_scroll_x: False
+            do_scroll_y: True
 
             GridLayout:
                 id: calendar_grid
                 cols: 7
                 size_hint_y: None
-                height: self.minimum_height  # Dynamically calculate the height based on content
+                height: self.minimum_height
                 spacing: dp(2)
                 row_default_height: dp(80)
                 row_force_default: True
 
-                # Calendar days will be populated dynamically
+
 
         Widget:
             size_hint_y: None
@@ -87,15 +87,15 @@
         BoxLayout:
             size_hint_y: None
             height: dp(50)
-            padding: [dp(10), dp(10)]  # Ensure padding around the button
+            padding: [dp(10), dp(10)]
             Button:
                 text: "Export"
-                size_hint_x: 1  # Ensure the button fills the entire width
+                size_hint_x: 1
                 background_normal: ''
-                background_color: 0.2, 0.6, 0.86, 1  # Set your desired color
-                color: [1, 1, 1, 1]  # White text color
+                background_color: 0.2, 0.6, 0.86, 1
+                color: [1, 1, 1, 1]
                 on_release: app.open_export_modal()
 
-        Widget:  # Spacer below the button
+        Widget:
             size_hint_y: None
             height: "10dp"

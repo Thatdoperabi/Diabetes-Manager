@@ -35,6 +35,7 @@ from dotenv import load_dotenv
 from kivy.uix.label import Label
 from kivy.animation import Animation
 from kivy.garden.graph import Graph, MeshLinePlot
+from kivy.utils import platform
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from kivy.uix.modalview import ModalView
@@ -512,53 +513,62 @@ class DiabetesManager(MDApp):
         modal.open()
 
     def export_to_pdf(self):
-        # Access the ExportScreen and then get the calendar_grid
-        export_screen = self.root.ids.screen_manager.get_screen('export_screen')
-        calendar_grid = export_screen.ids.calendar_grid
+        from kivy.utils import platform
 
-        file_name = f"calendar_export_{datetime.now().strftime('%Y%m%d')}.pdf"
+
+        if platform == 'android':
+            from android.storage import primary_external_storage_path
+            downloads_dir = os.path.join(primary_external_storage_path(), "Download")
+        else:
+            downloads_dir = os.path.expanduser("~")
+
+        if not os.path.exists(downloads_dir):
+            os.makedirs(downloads_dir)
+
+        file_name = os.path.join(downloads_dir, f"calendar_export_{datetime.now().strftime('%Y%m%d')}.pdf")
         c = canvas.Canvas(file_name, pagesize=letter)
         c.setFont("Helvetica", 10)
+
+
+        export_screen = self.root.ids.screen_manager.get_screen('export_screen')
+        calendar_grid = export_screen.ids.calendar_grid
 
         width, height = letter
         c.drawString(0.5 * inch, height - 0.5 * inch, "")
 
-        # Add the month and year at the top, centered
+
         month_year = datetime.now().strftime("%B %Y")
         c.setFont("Helvetica-Bold", 12)
         text_width = c.stringWidth(month_year, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, height - 1.0 * inch, month_year)
 
-        cell_width = inch * 1.0  # Cell width
-        cell_height = inch * 0.8  # Cell height
+        cell_width = inch * 1.0
+        cell_height = inch * 0.8
 
         def strip_markup(text):
-            # Remove Kivy markup tags using regex
             return re.sub(r'\[.*?\]', '', text)
 
         for i, widget in enumerate(calendar_grid.children[::-1]):
             if isinstance(widget, MDLabel):
                 text = strip_markup(widget.text.strip())
 
-                # Split the text into lines
                 lines = text.splitlines()
-                date_line = lines[0] if lines else ""  # The date should be the first line
-                data_lines = lines[1:]  # The rest are data lines
+                date_line = lines[0] if lines else ""
+                data_lines = lines[1:]
 
                 x = (i % 7) * cell_width + 0.5 * inch
                 y = height - (2.0 * inch + (i // 7) * cell_height)
 
-                # Draw the date in the top left corner
-                c.drawString(x + 1, y - 1, date_line)  # Positioning the date closer to the top left
 
-                # Center-align the data lines within the cell
-                y_offset = 0.45 * inch  # Center the data vertically in the cell
+                c.drawString(x + 1, y - 1, date_line)
+
+
+                y_offset = 0.45 * inch
                 for line in data_lines:
                     line_width = c.stringWidth(line, "Helvetica", 10)
                     c.drawString(x + (cell_width - line_width) / 2, y - y_offset, line)
-                    y_offset -= 12  # Adjust for the next line within the cell
+                    y_offset -= 12
 
-                # Draw a border around the cell
                 c.setStrokeColorRGB(0, 0, 0)
                 c.rect(x, y - cell_height + 0.15 * inch, cell_width, cell_height, stroke=1, fill=0)
 
